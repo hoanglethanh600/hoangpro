@@ -366,6 +366,45 @@
         #dashboard-view .max-w-2xl { max-width: none !important; }
         #lesson-view > div { max-width: none !important; width: 100%; }
         #quiz-view .max-w-2xl, #quiz-view .max-w-3xl { max-width: none !important; width: 100%; }
+        /* ===== V26: trắc nghiệm full chiều ngang — PC 2 cột, điện thoại dọc 1 cột, xoay ngang 2 cột đáp án ===== */
+        #quiz-view, #quiz-body { width: 100%; }
+        .quiz-full { width: 100%; }
+        .quiz-topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; background: rgba(15,23,42,.55); border-radius: 1rem; padding: 8px 12px; }
+        .quiz-topbar > span { flex: 1; min-width: 140px; text-align: center; }
+        .quiz-rotate-hint { display: none; font-size: 12px; font-weight: 700; color: #e2e8f0; text-align: center; margin: -4px 0 12px; }
+        .quiz-card { width: 100%; }
+        .quiz-layout { display: block; }
+        .quiz-question { overflow-wrap: anywhere; }
+        .quiz-opts { display: grid; gap: 10px; margin-top: 20px; }
+        .quiz-opt { min-height: 52px; align-items: center; }
+        .quiz-opt .flex-1 { min-width: 0; overflow-wrap: anywhere; }
+        .quiz-review { display: grid; gap: 12px; }
+        @media (max-width: 767px) {
+            .quiz-opt { font-size: 15px; padding: 14px; }
+            .quiz-topbar > span { font-size: 11px; }
+        }
+        @media (max-width: 767px) and (orientation: portrait) { .quiz-rotate-hint { display: block; } }
+        @media (orientation: landscape) and (max-height: 540px) {
+            .quiz-opts { grid-template-columns: 1fr 1fr; }
+            .quiz-card { padding: 14px !important; }
+            .quiz-question { font-size: 15px !important; }
+            .quiz-opt { padding: 10px 12px; min-height: 44px; font-size: 14px; }
+        }
+        @media (min-width: 1024px) {
+            .quiz-layout { display: grid; grid-template-columns: 1fr 1.15fr; grid-template-areas: "question options" "feedback options" "actions options"; gap: 0 28px; align-items: start; }
+            .quiz-question { grid-area: question; font-size: 19px !important; }
+            .quiz-opts { grid-area: options; margin-top: 8px; }
+            .quiz-feedback { grid-area: feedback; }
+            .quiz-actions { grid-area: actions; }
+            .quiz-review { grid-template-columns: 1fr 1fr; }
+            .quiz-card { padding: 28px !important; }
+            .quiz-opt { font-size: 15px; padding: 16px; }
+        }
+        @media (min-width: 1280px) { .quiz-layout { grid-template-columns: 1fr 1.05fr; } }
+        body.quiz-fs header, body.quiz-fs #main-sidebar, body.quiz-fs #site-footer, body.quiz-fs #ai-bot-wrap, body.quiz-fs .floating-controls { display: none !important; }
+        body.quiz-fs main { padding: 0 !important; }
+        body.quiz-fs #quiz-view { padding: 12px; }
+        #quiz-view:fullscreen, #quiz-view:-webkit-full-screen { overflow-y: auto; background: #f1f5f9; padding: 16px; width: 100%; height: 100%; }
         #lesson-body p, #lesson-body li { font-size: 16px !important; line-height: 1.9 !important; color: #1e293b !important; }
         #lesson-body h3 { color: #0f172a !important; font-size: 18px !important; }
         /* Chữ nằm trực tiếp trên nền vũ trụ tối (không nằm trong thẻ trắng) phải sáng, không dùng xám đậm */
@@ -4857,18 +4896,22 @@ function renderQuiz() {
     palette += '<button onclick="quizGoTo(' + i + ')" class="w-8 h-8 rounded-lg text-[11px] font-black ' + cls + '">' + (i + 1) + '</button>';
   });
   const clockLabel = st.timeLimit ? '⏱ Còn lại' : '⏱ Đã làm';
-  document.getElementById('quiz-body').innerHTML = '<div class="max-w-3xl mx-auto">'
-    + '<div class="flex items-center justify-between gap-2 mb-3"><button onclick="showCategoryView(\'' + escAttr(st.post.categoryId) + '\')" class="text-xs font-bold text-white">← Thoát đề</button><span class="text-xs font-black text-slate-200">' + clockLabel + ' <span id="quiz-clock">00:00</span>' + (st.timeLimit ? ' / ' + st.timeLimit + ' phút' : '') + ' · Đã xác nhận ' + done + '/' + total + ' câu</span></div>'
+  document.getElementById('quiz-body').innerHTML = '<div class="quiz-full">'
+    + '<div class="quiz-topbar"><button onclick="quizBackToCategory(\'' + escAttr(st.post.categoryId) + '\')" class="text-xs font-bold text-white">← Thoát đề</button><span class="text-xs font-black text-white">' + clockLabel + ' <span id="quiz-clock">00:00</span>' + (st.timeLimit ? ' / ' + st.timeLimit + ' phút' : '') + ' · Đã xác nhận ' + done + '/' + total + ' câu</span><button onclick="toggleQuizFullscreen()" class="text-xs font-black text-white bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl active:scale-95">' + (document.body.classList.contains('quiz-fs') ? '⛶ Thu nhỏ' : '⛶ Toàn màn hình') + '</button></div>' + '<p class="quiz-rotate-hint">📱 Mẹo: xoay ngang điện thoại để đáp án xếp 2 cột, rộng và dễ bấm hơn.</p>'
     + '<div class="h-2.5 bg-slate-200 rounded-full overflow-hidden mb-4"><div class="h-full bg-indigo-600 transition-all" style="width:' + Math.round(done / total * 100) + '%"></div></div>'
-    + '<div class="bg-white rounded-[2rem] border p-5 sm:p-7 shadow-sm"><p class="text-[11px] font-black text-indigo-500 uppercase">Câu ' + (st.idx + 1) + ' / ' + total + ' · ' + escHtml(st.post.title) + '</p>'
-    + '<h3 class="text-base sm:text-lg font-bold text-slate-800 leading-relaxed mt-2">' + escHtml(q.q) + '</h3>'
-    + '<div class="space-y-2.5 mt-5">' + opts + '</div>'
-    + (showNow && isConfirmed ? '<div class="mt-5 p-4 rounded-2xl ' + (picked === q.answer ? 'bg-blue-50 border border-blue-200 text-blue-800' : 'bg-red-50 border border-red-200 text-red-800') + ' text-sm leading-relaxed"><b>' + (picked === q.answer ? '✅ Chính xác!' : '❌ Chưa đúng. Đáp án đúng là ' + letters[q.answer] + '.') + '</b>' + (q.explain ? '<br><span>' + escHtml(q.explain) + '</span>' : '') + '<br><span class="text-xs font-semibold opacity-80">Tự chuyển câu tiếp theo sau 3 giây — bấm “Câu tiếp theo” để chuyển ngay.</span></div>' : '')
-    + (!showNow && isConfirmed ? '<div class="mt-5 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-sm leading-relaxed"><b>Đã ghi nhận đáp án câu này.</b> Đáp án đúng/sai và giải thích sẽ hiện khi bạn làm xong toàn bài.</div>' : '')
-    + (!isConfirmed ? '<p class="text-xs text-slate-400 font-semibold mt-4">👉 Chọn 1 đáp án, rồi bấm “Xác nhận đáp án”' + (showNow ? ' để xem đúng/sai, rồi hệ thống tự chuyển câu sau 3 giây.' : ' — hệ thống sẽ tự chuyển sang câu tiếp theo, đáp án chỉ hiện khi làm xong toàn bài.') + '</p>' : '')
-    + '<div class="flex flex-wrap gap-2 mt-5">' + (!isConfirmed ? '<button ' + (picked === null ? 'disabled' : 'onclick="confirmQuizAnswer()"') + ' class="btn btn-primary flex-1 min-w-[180px] py-3.5 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm">✓ Xác nhận đáp án</button>' : '') + (isConfirmed ? (st.idx < total - 1 ? '<button onclick="quizNext()" class="btn btn-primary flex-1 min-w-[180px] py-3.5 text-white rounded-2xl font-black text-sm">Câu tiếp theo →</button>' : '<button onclick="finishQuiz()" class="btn btn-primary flex-1 min-w-[180px] py-3.5 text-white rounded-2xl font-black text-sm">🏁 Xem kết quả</button>') : '') + '</div></div>'
+    + '<div class="bg-white rounded-[2rem] border p-5 sm:p-7 shadow-sm quiz-card"><p class="text-[11px] font-black text-indigo-500 uppercase">Câu ' + (st.idx + 1) + ' / ' + total + ' · ' + escHtml(st.post.title) + '</p>'
+    + '<div class="quiz-layout"><h3 class="quiz-question text-base sm:text-lg font-bold text-slate-800 leading-relaxed mt-2">' + escHtml(q.q) + '</h3>'
+    + '<div class="quiz-opts">' + opts + '</div>'
+    + (showNow && isConfirmed ? '<div class="quiz-feedback mt-5 p-4 rounded-2xl ' + (picked === q.answer ? 'bg-blue-50 border border-blue-200 text-blue-800' : 'bg-red-50 border border-red-200 text-red-800') + ' text-sm leading-relaxed"><b>' + (picked === q.answer ? '✅ Chính xác!' : '❌ Chưa đúng. Đáp án đúng là ' + letters[q.answer] + '.') + '</b>' + (q.explain ? '<br><span>' + escHtml(q.explain) + '</span>' : '') + '<br><span class="text-xs font-semibold opacity-80">Tự chuyển câu tiếp theo sau 3 giây — bấm “Câu tiếp theo” để chuyển ngay.</span></div>' : '')
+    + (!showNow && isConfirmed ? '<div class="quiz-feedback mt-5 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-sm leading-relaxed"><b>Đã ghi nhận đáp án câu này.</b> Đáp án đúng/sai và giải thích sẽ hiện khi bạn làm xong toàn bài.</div>' : '')
+    + (!isConfirmed ? '<p class="quiz-feedback text-xs text-slate-400 font-semibold mt-4">👉 Chọn 1 đáp án, rồi bấm “Xác nhận đáp án”' + (showNow ? ' để xem đúng/sai, rồi hệ thống tự chuyển câu sau 3 giây.' : ' — hệ thống sẽ tự chuyển sang câu tiếp theo, đáp án chỉ hiện khi làm xong toàn bài.') + '</p>' : '')
+    + '<div class="quiz-actions flex flex-wrap gap-2 mt-5">' + (!isConfirmed ? '<button ' + (picked === null ? 'disabled' : 'onclick="confirmQuizAnswer()"') + ' class="btn btn-primary flex-1 min-w-[180px] py-3.5 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm">✓ Xác nhận đáp án</button>' : '') + (isConfirmed ? (st.idx < total - 1 ? '<button onclick="quizNext()" class="btn btn-primary flex-1 min-w-[180px] py-3.5 text-white rounded-2xl font-black text-sm">Câu tiếp theo →</button>' : '<button onclick="finishQuiz()" class="btn btn-primary flex-1 min-w-[180px] py-3.5 text-white rounded-2xl font-black text-sm">🏁 Xem kết quả</button>') : '') + '</div></div></div>'
     + '<div class="bg-white rounded-2xl border p-4 mt-4"><p class="text-[11px] font-black text-slate-600 uppercase mb-2">Sơ đồ câu hỏi — ' + (showNow ? 'xanh dương: đúng, đỏ: sai, xám: chưa làm' : 'viền chàm: đã làm, xám: chưa làm (đáp án chỉ hiện khi làm xong)') + ' (chỉ xem lại câu đã làm)</p><div class="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1">' + palette + '</div></div></div>';
 }
+function quizBackToCategory(catId) { exitQuizFullscreen(); showCategoryView(catId); }
+function exitQuizFullscreen() { document.body.classList.remove('quiz-fs'); if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen().catch(function(){}); } }
+function toggleQuizFullscreen() { var on = document.body.classList.toggle('quiz-fs'); var qv = document.getElementById('quiz-view'); if (on) { if (qv && qv.requestFullscreen) { qv.requestFullscreen().catch(function(){}); } } else { if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen().catch(function(){}); } } renderQuiz(); }
+document.addEventListener('fullscreenchange', function() { var qv = document.getElementById('quiz-view'); if (!qv) return; if (document.fullscreenElement === qv) { document.body.classList.add('quiz-fs'); } else if (!document.fullscreenElement) { document.body.classList.remove('quiz-fs'); if (qv.style.display !== 'none' && typeof quizState !== 'undefined' && quizState) renderQuiz(); } });
 function finishQuiz() {
   const st = quizState; if (!st) return;
   stopQuizTimer();
@@ -4888,12 +4931,12 @@ function finishQuiz() {
     const ok = st.picked[i] === q.answer;
     review += '<div class="bg-white border rounded-2xl p-4 text-left"><p class="text-sm font-bold text-slate-800">Câu ' + (i + 1) + ': ' + escHtml(q.q) + '</p><p class="text-xs mt-2 ' + (ok ? 'text-blue-600' : 'text-red-500') + ' font-bold">' + (ok ? '✅ Đúng' : '❌ Sai') + ' — Bạn chọn: ' + (st.picked[i] === null ? '—' : letters[st.picked[i]] + '. ' + escHtml(q.options[st.picked[i]])) + ' · Đáp án đúng: ' + letters[q.answer] + '. ' + escHtml(q.options[q.answer]) + '</p>' + (q.explain ? '<p class="text-xs text-slate-500 mt-1">💡 ' + escHtml(q.explain) + '</p>' : '') + '</div>';
   });
-  document.getElementById('quiz-body').innerHTML = '<div class="max-w-3xl mx-auto text-center"><div class="bg-white rounded-[2rem] border p-6 sm:p-8 shadow-sm">'
+  document.getElementById('quiz-body').innerHTML = '<div class="quiz-full text-center"><div class="quiz-topbar" style="text-align:left"><span class="text-xs font-black text-white">🏁 Kết quả bài làm</span><button onclick="toggleQuizFullscreen()" class="text-xs font-black text-white bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl active:scale-95">⛶ Toàn màn hình / Thu nhỏ</button></div><div class="bg-white rounded-[2rem] border p-6 sm:p-8 shadow-sm">'
     + (st.timeUp ? '<p class="text-sm font-black text-red-600 bg-red-50 border border-red-200 rounded-2xl p-3 mb-4">⏰ Hết giờ — hệ thống đã tự nộp bài.</p>' : '')
     + '<p class="text-4xl">🎉</p><h3 class="text-xl font-black text-slate-800 mt-2">Kết quả: ' + score + ' / ' + total + ' câu đúng (' + pct + '%)</h3><p class="font-black text-indigo-600 mt-1">' + rank + '</p>'
     + '<p class="text-xs text-slate-500 mt-2">' + escHtml(st.post.title) + ' · Thời gian làm bài khoảng ' + mins + ' phút' + (st.timeLimit ? ' / giới hạn ' + st.timeLimit + ' phút' : '') + ' · Kết quả đã lưu (xem trong Sheet quizResults nếu đã triển khai App Script mới).</p>'
-    + '<div class="flex flex-wrap justify-center gap-2 mt-5"><button onclick="startQuiz()" class="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm active:scale-95">🔄 Làm lại đề này</button><button onclick="showCategoryView(\'' + escAttr(st.post.categoryId) + '\')" class="px-6 py-3 bg-slate-100 rounded-2xl font-black text-sm active:scale-95">← Về danh mục</button></div></div>'
-    + '<h4 class="text-left font-black text-slate-700 text-sm uppercase mt-6 mb-3">Xem lại từng câu — xanh dương: đúng, đỏ: sai</h4><div class="space-y-3 text-left">' + review + '</div></div>';
+    + '<div class="flex flex-wrap justify-center gap-2 mt-5"><button onclick="startQuiz()" class="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm active:scale-95">🔄 Làm lại đề này</button><button onclick="quizBackToCategory(\'' + escAttr(st.post.categoryId) + '\')" class="px-6 py-3 bg-slate-100 rounded-2xl font-black text-sm active:scale-95">← Về danh mục</button></div></div>'
+    + '<h4 class="text-left font-black text-slate-700 text-sm uppercase mt-6 mb-3">Xem lại từng câu — xanh dương: đúng, đỏ: sai</h4><div class="quiz-review text-left">' + review + '</div></div>';
   quizState = null;
   const sc = document.getElementById('scrollable-content'); if (sc) sc.scrollTo({ top: 0 });
 }
