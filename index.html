@@ -1042,6 +1042,8 @@
                         <div><label class="text-[10px] font-bold text-slate-500 uppercase">Danh mục cha</label><select id="ad-cat-parent" class="w-full p-3 border rounded-xl text-sm bg-white mt-1 font-bold text-indigo-600"></select></div>
                         <div><label class="text-[10px] font-bold text-slate-500 uppercase">Biểu tượng</label><input type="text" id="ad-cat-icon" value="📘" class="w-full p-3 border rounded-xl text-sm bg-white mt-1"></div>
                         <div><label class="text-[10px] font-bold text-slate-500 uppercase">Thứ tự</label><input type="number" id="ad-cat-order" min="0" class="w-full p-3 border rounded-xl text-sm bg-white mt-1"></div>
+                        <div><label class="text-[10px] font-bold text-slate-500 uppercase">Chế độ tính phí (submenu)</label><select id="ad-cat-feemode" class="w-full p-3 border rounded-xl text-sm bg-white mt-1 font-bold text-indigo-600"><option value="default" selected>Theo chế độ chung</option><option value="free">Miễn phí</option><option value="per_use">Trừ xu mỗi lượt</option><option value="monthly">Gói theo tháng (30 ngày)</option><option value="one_time">Mua 1 năm (365 ngày)</option></select></div>
+                        <div><label class="text-[10px] font-bold text-slate-500 uppercase">Giá riêng (Xu, để trống = giá chung)</label><input type="number" id="ad-cat-price" min="0" placeholder="Ví dụ: 5000" class="w-full p-3 border rounded-xl text-sm bg-white mt-1"></div>
                         <button onclick="saveCategory()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm h-[46px] shadow-md active:scale-95">LƯU DANH MỤC</button>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mb-4 bg-white border rounded-2xl p-3"><button onclick="suggestCatIcon(true)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">🤖 AI gợi ý icon</button><label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer"><input type="checkbox" id="ad-cat-auto-icon" checked class="w-4 h-4 accent-indigo-600"> Tự gợi ý khi gõ tên</label><div id="ad-cat-icon-suggest" class="flex gap-1 flex-wrap"></div><span class="text-[11px] text-slate-500 font-semibold">Bấm chip để chọn. Có key Gemini thì nút này hỏi Gemini trước, không có key thì gợi ý theo từ khoá.</span></div>
@@ -5254,6 +5256,281 @@ async function syncNew() {
     wrapped.__v19 = true; savePost = wrapped;
   }
 })();
+
+    </script>
+    <script>
+/* ============================================================
+   V22 — MENU HỌC TẬP: CÁC SUBMENU TÍNH PHÍ GIỐNG MENU LIÊN KẾT CŨ
+   Cơ chế menu liên kết cũ (đã có sẵn, giữ nguyên):
+   - Chế độ chung MENU_MODE (localStorage cfg_menu_mode, mặc định
+     per_use) và bảng giá chung: 1 lượt 5.000 Xu, 1 tháng 99.000 Xu,
+     mua 1 năm 499.000 Xu, miễn phí 0 Xu.
+   - Mỗi menu có thể có chế độ riêng (feemode: default/free/
+     per_use/monthly/one_time) và giá riêng (price/gia). Có giá
+     riêng thì dùng giá riêng cho gói trùng chế độ gốc, các gói
+     còn lại dùng giá chung. Hộp chọn gói (openPayChoice) cho chọn
+     1 trong 3 gói, trừ Xu qua updateUserCoins, ghi nhớ mua 1 năm
+     (purchased_ + yearly_expiry_) và gói tháng (expiry_).
+   - Chế độ trừ lượt được dùng lượt miễn phí trước (FREE_LIMIT,
+     mặc định 1 lượt/menu).
+   Áp dụng y hệt cho menu học tập, chỉ khác "mở menu" = "mở submenu":
+   - Chỉ các submenu (danh mục có parentId, ví dụ Tin học 6/7/8/9)
+     mới bị tính phí. Danh mục gốc (Tin học) chỉ để mở/đóng và xem
+     danh sách submenu, không tính phí.
+   - Bấm submenu: nếu miễn phí / tài khoản Vô hạn / còn quyền gói
+     tháng hoặc 1 năm / còn lượt truy cập trong phiên (đã mua 1 lượt
+     hoặc đã dùng lượt miễn phí) thì mở ngay. Ngược lại, nếu chế độ
+     trừ lượt và còn lượt miễn phí thì dùng lượt miễn phí rồi mở;
+     nếu không thì mở đúng hộp chọn gói cũ (openPayChoice) với tên
+     submenu, giá và gói mặc định của submenu đó.
+   - Gói 1 lượt cho submenu: sau khi trả Xu, cho truy cập submenu
+     đó trong phiên trình duyệt hiện tại (sessionStorage), đủ để
+     xem danh sách và mở các bài/đề bên trong mà không bị trừ thêm
+     cho mỗi bài. Hết phiên (đóng tab/trình duyệt) thì lượt đó hết,
+     lần sau mở lại submenu lại tính như menu cũ. Gói tháng/1 năm
+     thì dùng đúng cơ chế ghi nhớ cũ (expiry_/yearly_expiry_), dùng
+     chung key với menu cũ theo id danh mục.
+   - Bấm bài học/đề thi bên trong submenu chưa có quyền thì cũng
+     chạy qua đúng cổng tính phí của submenu đó; sau khi trả tiền
+     xong sẽ tự mở luôn bài/đề vừa bấm (không bắt bấm lại).
+   - Menu trái: mỗi submenu hiện thêm nhãn giống menu cũ: Free
+     (miễn phí/Vô hạn), Đã Mua (còn quyền tháng/1 năm), hoặc giá
+     (ví dụ "5k xu") theo chế độ và giá riêng của submenu đó.
+   - Admin: form danh mục thêm 2 ô "Chế độ tính phí" (Theo chế độ
+     chung / Miễn phí / Trừ xu mỗi lượt / Gói theo tháng / Mua 1 năm)
+     và "Giá riêng (Xu, để trống = dùng giá chung)". Lưu vào Sheet
+     categories cột 7 feemode, cột 8 price (GAS v22 tự thêm header).
+     Danh mục cũ chưa có 2 cột này thì mặc định theo chế độ chung,
+     giống menu cũ, nên không làm mất quyền truy cập cũ.
+   ============================================================ */
+function learnCatItem(cat) {
+  if (!cat) return null;
+  return { id: cat.id, name: cat.name, feemode: cat.feemode || 'default', feeMode: cat.feemode || 'default', price: (cat.price !== undefined && cat.price !== null && String(cat.price) !== '') ? cat.price : null, gia: (cat.price !== undefined && cat.price !== null && String(cat.price) !== '') ? cat.price : null };
+}
+function learnSessionKey(catId) {
+  const u = (typeof currentUser !== 'undefined' && currentUser && currentUser.username) ? currentUser.username : 'guest';
+  return 'learn_session_' + u + '_' + catId;
+}
+function grantLearnSession(catId) {
+  try { sessionStorage.setItem(learnSessionKey(catId), '1'); } catch (e) {}
+}
+function hasLearnSession(catId) {
+  try { return sessionStorage.getItem(learnSessionKey(catId)) === '1'; } catch (e) { return false; }
+}
+function hasLearnAccess(cat) {
+  if (!cat) return false;
+  if (!cat.parentId) return true;
+  try {
+    if (typeof isUnlimitedUser === 'function' && isUnlimitedUser(currentUser)) return true;
+  } catch (e) {}
+  const item = learnCatItem(cat);
+  let mode = 'per_use';
+  try { mode = getEffectiveMenuMode(item); } catch (e) {}
+  if (mode === 'free') return true;
+  try {
+    if (isYearlyAccessValid(cat.id) || getMonthlyExpiry(cat.id) > Date.now()) return true;
+  } catch (e) {}
+  if (hasLearnSession(cat.id)) return true;
+  return false;
+}
+function learnBadgeHtml(cat) {
+  if (!cat || !cat.parentId) return '';
+  try {
+    if (typeof isUnlimitedUser === 'function' && isUnlimitedUser(currentUser)) return '<span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold shrink-0">Free</span>';
+  } catch (e) {}
+  const item = learnCatItem(cat);
+  let mode = 'per_use';
+  try { mode = getEffectiveMenuMode(item); } catch (e) {}
+  if (mode === 'free') return '<span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold shrink-0">Free</span>';
+  try {
+    if (isYearlyAccessValid(cat.id) || getMonthlyExpiry(cat.id) > Date.now()) return '<span class="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold shrink-0">Đã Mua</span>';
+  } catch (e) {}
+  let costTxt = '';
+  try { costTxt = formatCoinsShort(getCostForMenu(item)); } catch (e) { costTxt = ''; }
+  if (!costTxt) return '';
+  return '<span class="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold shrink-0">' + costTxt + '</span>';
+}
+function refreshCatNavBadgesV22() {
+  try {
+    const nav = document.getElementById('cat-nav');
+    if (!nav) return;
+    nav.querySelectorAll('button').forEach(btn => {
+      const oc = btn.getAttribute('onclick') || '';
+      const m = oc.match(/showCategoryView\('([^']+)'\)/);
+      if (!m) return;
+      const cat = getCat(m[1]);
+      const badge = learnBadgeHtml(cat);
+      if (badge) btn.insertAdjacentHTML('beforeend', badge);
+    });
+  } catch (e) {}
+}
+function tryOpenLearnCategory(catId, pendingPostId, pendingPostType) {
+  const cat = getCat(catId);
+  if (!cat) return;
+  if (!cat.parentId || hasLearnAccess(cat)) {
+    if (pendingPostId && pendingPostType === 'quiz') { __origShowQuizIntro(pendingPostId); return; }
+    if (pendingPostId) { __origOpenLesson(pendingPostId); return; }
+    __origShowCategoryView(catId);
+    return;
+  }
+  const item = learnCatItem(cat);
+  let mode = 'per_use';
+  try { mode = getEffectiveMenuMode(item); } catch (e) {}
+  if (mode !== 'one_time' && mode !== 'monthly') {
+    let usedFree = 0;
+    try { usedFree = getFreeUsageForMenu(cat.id); } catch (e) {}
+    let limit = 1;
+    try { limit = (typeof FREE_LIMIT !== 'undefined' && FREE_LIMIT) ? FREE_LIMIT : 1; } catch (e) {}
+    if (usedFree < limit) {
+      try { setFreeUsageForMenu(cat.id, usedFree + 1); } catch (e) {}
+      grantLearnSession(cat.id);
+      alert('Bạn đang dùng lượt MIỄN PHÍ thứ ' + (usedFree + 1) + '/' + limit + ' cho submenu: "' + cat.name + '".');
+      if (pendingPostId && pendingPostType === 'quiz') { __origShowQuizIntro(pendingPostId); return; }
+      if (pendingPostId) { __origOpenLesson(pendingPostId); return; }
+      __origShowCategoryView(catId);
+      return;
+    }
+  }
+  if (typeof currentUser === 'undefined' || !currentUser) {
+    alert('Submenu "' + cat.name + '" đang tính phí. Hãy đăng nhập để mua gói, hoặc dùng lượt miễn phí nếu còn.');
+    const auth = document.getElementById('modal-auth');
+    if (auth) auth.classList.add('active');
+    return;
+  }
+  try { openPayChoice(item, null); } catch (e) { alert('Không mở được hộp chọn gói. Hãy thử lại.'); return; }
+  try {
+    if (typeof payChoiceCtx !== 'undefined' && payChoiceCtx) {
+      payChoiceCtx.isLearn = true;
+      payChoiceCtx.learnCatId = catId;
+      payChoiceCtx.pendingPostId = pendingPostId || null;
+      payChoiceCtx.pendingPostType = pendingPostType || null;
+    }
+  } catch (e) {}
+}
+const __origShowCategoryView = (typeof showCategoryView === 'function') ? showCategoryView : null;
+const __origOpenLesson = (typeof openLesson === 'function') ? openLesson : null;
+const __origShowQuizIntro = (typeof showQuizIntro === 'function') ? showQuizIntro : null;
+if (__origShowCategoryView) {
+  showCategoryView = function (id) {
+    const cat = getCat(id);
+    if (cat && cat.parentId && !hasLearnAccess(cat)) { tryOpenLearnCategory(id); return; }
+    __origShowCategoryView(id);
+  };
+}
+if (__origOpenLesson) {
+  openLesson = function (id) {
+    const p = getPost(id);
+    if (p) {
+      const cat = getCat(p.categoryId);
+      if (cat && cat.parentId && !hasLearnAccess(cat)) { tryOpenLearnCategory(p.categoryId, id, 'lesson'); return; }
+    }
+    __origOpenLesson(id);
+  };
+}
+if (__origShowQuizIntro) {
+  showQuizIntro = function (id) {
+    const p = getPost(id);
+    if (p) {
+      const cat = getCat(p.categoryId);
+      if (cat && cat.parentId && !hasLearnAccess(cat)) { tryOpenLearnCategory(p.categoryId, id, 'quiz'); return; }
+    }
+    __origShowQuizIntro(id);
+  };
+}
+(function hookRenderCatNavV22() {
+  if (typeof renderCatNav === 'function' && !renderCatNav.__v22) {
+    const orig = renderCatNav;
+    const wrapped = function () { orig(); refreshCatNavBadgesV22(); };
+    wrapped.__v22 = true; renderCatNav = wrapped;
+  }
+})();
+(function hookPayForMenuV22() {
+  if (typeof payForMenu === 'function' && !payForMenu.__v22) {
+    const origPay = payForMenu;
+    const wrapped = async function (mode) {
+      let ctx = null;
+      try { ctx = (typeof payChoiceCtx !== 'undefined') ? payChoiceCtx : null; } catch (e) {}
+      if (!ctx || !ctx.isLearn) { return origPay(mode); }
+      const catId = ctx.learnCatId;
+      const pendingPostId = ctx.pendingPostId;
+      const pendingPostType = ctx.pendingPostType;
+      const price = getPayOptionPrice(ctx.menuItem, mode);
+      const userCoins = Number(currentUser.coins || 0);
+      const label = mode === 'per_use' ? 'dùng 1 lượt' : (mode === 'monthly' ? 'gói 1 tháng (30 ngày)' : 'mua 1 năm (365 ngày)');
+      if (userCoins < price) {
+        alert('Số dư không đủ để chọn ' + label + ' cho submenu "' + ctx.name + '".\nGiá gói: ' + price.toLocaleString() + ' Xu. Bạn hiện có: ' + userCoins.toLocaleString() + ' Xu. Vui lòng nạp thêm Xu.');
+        closePayChoice();
+        const dep = document.getElementById('modal-deposit');
+        if (dep) dep.classList.add('active');
+        return;
+      }
+      if (!confirm('Xác nhận thanh toán ' + price.toLocaleString() + ' Xu để ' + label + ' cho submenu "' + ctx.name + '"?')) return;
+      try {
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'flex';
+        const newCoins = userCoins - price;
+        await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'updateUserCoins', username: currentUser.username, coins: newCoins }) });
+        currentUser.coins = newCoins;
+        try { sessionStorage.setItem('user', JSON.stringify(currentUser)); } catch (e) {}
+        if (mode === 'monthly') setMonthlyExpiry(catId);
+        if (mode === 'one_time') { setMenuPurchased(catId); setYearlyExpiry(catId); }
+        if (mode === 'per_use') grantLearnSession(catId);
+        try { render(); } catch (e) {}
+        try { renderCatNav(); } catch (e) {}
+        if (loading) loading.style.display = 'none';
+        closePayChoice();
+        alert(mode === 'per_use' ? 'Đã trừ ' + price.toLocaleString() + ' Xu cho 1 lượt dùng submenu "' + ctx.name + '". Bạn có thể xem các bài/đề trong submenu này trong phiên hiện tại.' : 'Chúc mừng! Bạn đã kích hoạt ' + label + ' cho submenu "' + ctx.name + '".');
+        if (pendingPostId && pendingPostType === 'quiz') { __origShowQuizIntro(pendingPostId); return; }
+        if (pendingPostId) { __origOpenLesson(pendingPostId); return; }
+        __origShowCategoryView(catId);
+      } catch (err) {
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'none';
+        alert('Đã xảy ra lỗi hệ thống khi thanh toán xu! Vui lòng thử lại.');
+      }
+    };
+    wrapped.__v22 = true; payForMenu = wrapped;
+  }
+})();
+function normCats(rows) {
+  return rows.map(c => ({ id: String(c.id || ''), name: c.name || '', parentId: String(c.parentid || c.parentId || ''), icon: c.icon || '📁', sortOrder: Number(c.sortorder || c.sortOrder || 0) || 0, feemode: (c.feemode || c.feeMode || 'default'), price: (c.price !== undefined && c.price !== null && String(c.price) !== '') ? c.price : ((c.gia !== undefined && c.gia !== null && String(c.gia) !== '') ? c.gia : '') })).filter(c => c.id && c.name);
+}
+function resetCatForm() {
+  document.getElementById('ad-cat-id').value = '';
+  document.getElementById('ad-cat-name').value = '';
+  document.getElementById('ad-cat-parent').value = '';
+  document.getElementById('ad-cat-icon').value = '📘';
+  document.getElementById('ad-cat-order').value = '';
+  const fm = document.getElementById('ad-cat-feemode'); if (fm) fm.value = 'default';
+  const pr = document.getElementById('ad-cat-price'); if (pr) pr.value = '';
+}
+async function saveCategory() {
+  const name = document.getElementById('ad-cat-name').value.trim();
+  const parentId = document.getElementById('ad-cat-parent').value;
+  if (!name) { alert('Nhập tên danh mục.'); return; }
+  const id = document.getElementById('ad-cat-id').value || 'cat-' + Date.now();
+  if (parentId === id) { alert('Danh mục không thể là cha của chính nó.'); return; }
+  const feemode = (document.getElementById('ad-cat-feemode') || {}).value || 'default';
+  const priceRaw = (document.getElementById('ad-cat-price') || {}).value;
+  const price = (priceRaw === undefined || String(priceRaw).trim() === '') ? '' : Number(priceRaw);
+  const item = { id: id, name: name, parentId: parentId, icon: document.getElementById('ad-cat-icon').value.trim() || '📁', sortOrder: Number(document.getElementById('ad-cat-order').value) || 0, feemode: feemode, price: price };
+  try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveCategory', item: item }) }); } catch (e) {}
+  const old = getCat(id);
+  if (old) Object.assign(old, item); else { categories.push(item); localAddedCats.push(item); }
+  resetCatForm(); renderCatNav(); renderCatAdmin();
+  alert('Đã lưu danh mục “' + name + '”.' + (usingSeed ? '\nLưu ý: dữ liệu mẫu sẽ biến mất khi Sheet có dữ liệu thật — hãy bấm “Lưu dữ liệu mẫu lên Sheet” nếu muốn giữ lại mẫu.' : ''));
+}
+function editCategory(id) {
+  const c = getCat(id); if (!c) return;
+  document.getElementById('ad-cat-id').value = c.id;
+  document.getElementById('ad-cat-name').value = c.name;
+  document.getElementById('ad-cat-parent').value = c.parentId || '';
+  document.getElementById('ad-cat-icon').value = c.icon || '';
+  document.getElementById('ad-cat-order').value = c.sortOrder || '';
+  const fm = document.getElementById('ad-cat-feemode'); if (fm) fm.value = c.feemode || 'default';
+  const pr = document.getElementById('ad-cat-price'); if (pr) pr.value = (c.price !== undefined && c.price !== null) ? c.price : '';
+  document.getElementById('modal-admin').classList.add('active');
+}
 
     </script>
 </body>
