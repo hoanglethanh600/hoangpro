@@ -491,6 +491,58 @@
         .attach-tab.active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border-color: transparent; box-shadow: 0 8px 20px rgba(79,70,229,.4); }
         .attach-tab:focus-visible { outline: 3px solid rgba(129,140,248,.6); outline-offset: 2px; }
         @media (prefers-reduced-motion: reduce) { .attach-tab { transition: none; } }
+    
+        /* ===== V15: VIỀN VÀNG CHO CÁC KHUNG NỘI DUNG =====
+           Áp dụng cho: thẻ tiêu đề danh mục, thẻ bài học, thẻ đề thi
+           trong trang danh mục, và khung chi tiết bài học / đề thi.
+           Không đổi sidebar, modal, form admin hay nút bấm. Vàng #facc15
+           (amber-400) đủ nổi trên cả nền sáng và nền vũ trụ tối, chữ
+           trong thẻ vẫn giữ màu tối trên nền trắng nên vẫn đọc được. */
+        #category-view > div.bg-white:first-of-type,
+        #lesson-view > div.bg-white,
+        #quiz-body > div.bg-white,
+        #cat-view-lessons > p.bg-white,
+        #cat-view-quizzes > p.bg-white {
+            border: 2px solid #facc15 !important;
+            box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25), 0 10px 25px rgba(250, 204, 21, 0.15) !important;
+        }
+        #cat-view-lessons .cat-card,
+        #cat-view-quizzes .cat-card {
+            border: 2px solid #facc15 !important;
+            box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25), 0 10px 25px rgba(250, 204, 21, 0.15) !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        #cat-view-lessons .cat-card:hover,
+        #cat-view-quizzes .cat-card:hover {
+            border-color: #eab308 !important;
+            box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.4), 0 14px 30px rgba(234, 179, 8, 0.25) !important;
+            transform: translateY(-2px);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #cat-view-lessons .cat-card, #cat-view-quizzes .cat-card { transition: none; }
+            #cat-view-lessons .cat-card:hover, #cat-view-quizzes .cat-card:hover { transform: none; }
+        }
+    
+        /* ===== V16: NỀN KHÔNG GIAN NHÌN THẤY ĐƯỢC =====
+           Nguyên nhân cũ: #space-canvas ở z-index 0, nằm SAU các thẻ
+           trắng (bài học, đề thi, tiêu đề danh mục) nên sao băng, phi
+           thuyền, pháo hoa bay sau thẻ trắng và bị che gần hết, chỉ
+           ló ra ở khe hở. Nay đưa canvas lên z-index 20: trên nội dung
+           (z-index 1), dưới header (50), sidebar (40), nút nổi (900),
+           Bit (950) và modal (1000). Canvas vẫn pointer-events: none
+           nên bấm, cuộn, gõ vẫn xuyên qua, không bị chặn.
+           Nút 🌌 cũng hiện rõ trạng thái: tắt thì xám mờ, bật thì có
+           viền vàng phát sáng, để biết nền đang bật hay tắt. */
+        #space-canvas { z-index: 20 !important; }
+        body.space-off .floating-controls button[onclick="toggleSpace()"] { filter: grayscale(1); opacity: 0.55; }
+        body:not(.space-off) .floating-controls button[onclick="toggleSpace()"] { box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.6), 0 8px 20px rgba(79, 70, 229, 0.35) !important; }
+    
+        /* ===== V18: HIỆU ỨNG NHẤN CHUỘT ===== */
+        .click-fx-star { position: fixed; z-index: 2000; pointer-events: none; transform: translate(-50%, -50%); font-size: 20px; line-height: 1; animation: clickFxPop 0.7s ease-out forwards; text-shadow: 0 0 8px rgba(255, 255, 255, 0.9); }
+        @keyframes clickFxPop { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); } 100% { opacity: 0; transform: translate(-50%, -160%) scale(1.5) rotate(35deg); } }
+        .click-fx-ring { position: fixed; z-index: 2000; pointer-events: none; width: 36px; height: 36px; margin: -18px 0 0 -18px; border: 2px solid #facc15; border-radius: 50%; animation: clickFxRing 0.6s ease-out forwards; }
+        @keyframes clickFxRing { from { transform: scale(0.4); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .click-fx-star, .click-fx-ring { animation: none; } }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -1026,11 +1078,21 @@
                             <div class="flex flex-wrap items-center gap-2 mb-3"><span id="quiz-count-label" class="text-xs font-black text-indigo-700">0 câu hỏi</span><button onclick="addQuizQuestion()" class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">＋ Thêm câu hỏi</button><button onclick="loadSampleQuiz()" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">Nạp đề mẫu 40 câu Tin học 6</button></div>
                             <div class="space-y-3 mb-3">
                             <div class="flex flex-wrap gap-2 items-center bg-white border rounded-xl p-3"><label class="text-xs font-black text-slate-700">Khi thêm câu hỏi mới (AI hoặc file):</label><select id="ad-quiz-import-mode" class="p-2 border rounded-xl text-xs font-bold bg-white"><option value="append" selected>Thêm vào đề hiện có (bổ sung)</option><option value="replace">Thay toàn bộ đề hiện có</option></select></div>
+                            <div class="bg-white border border-indigo-200 rounded-2xl p-3 space-y-2">
+                                <label class="text-xs font-black text-indigo-700">⚙️ Cài đặt đề thi</label>
+                                <div class="flex flex-wrap gap-2 items-center">
+                                    <label class="text-xs font-bold text-slate-600">Hiện đáp án:</label>
+                                    <select id="ad-quiz-show-answers" class="p-2.5 border rounded-xl text-sm bg-white font-bold"><option value="end" selected>Chỉ hiện khi làm xong toàn bài</option><option value="each">Hiện ngay sau mỗi câu</option></select>
+                                    <label class="text-xs font-bold text-slate-600">Thời gian (phút):</label>
+                                    <input id="ad-quiz-time-limit" type="number" min="0" placeholder="0 = không giới hạn" class="p-2.5 border rounded-xl text-sm bg-white font-bold w-32">
+                                </div>
+                                <p class="text-xs font-semibold text-slate-500">Thời gian là tùy chọn: để trống hoặc 0 là không giới hạn. Nhập ví dụ 15, 30, 45 để đếm ngược và tự nộp bài khi hết giờ.</p>
+                            </div>
                             <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-3 space-y-2">
                                 <label class="text-xs font-black text-indigo-700">🤖 AI tự tạo đề (bổ sung)</label>
                                 <input id="ad-quiz-ai-topic" class="w-full p-2.5 border rounded-xl text-sm bg-white" placeholder="Chủ đề, ví dụ: Tin học 9 Bài 1 Thế giới kĩ thuật số (để trống sẽ lấy tiêu đề bài đăng)">
                                 <div class="flex flex-wrap gap-2 items-center">
-                                    <select id="ad-quiz-ai-count" class="p-2.5 border rounded-xl text-sm bg-white font-bold"><option value="5">5 câu</option><option value="10" selected>10 câu</option><option value="15">15 câu</option><option value="20">20 câu</option><option value="40">40 câu</option></select>
+                                    <input id="ad-quiz-ai-count" type="number" min="1" max="200" value="10" class="p-2.5 border rounded-xl text-sm bg-white font-bold w-24" title="Số câu AI tạo, tối đa 200">
                                     <select id="ad-quiz-ai-level" class="p-2.5 border rounded-xl text-sm bg-white font-bold"><option>Hỗn hợp Nhận biết, Thông hiểu và Vận dụng</option><option>Nhận biết</option><option>Thông hiểu</option><option>Vận dụng</option></select>
                                     <button onclick="aiGenerateQuiz()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold">🤖 AI tự tạo đề</button>
                                 </div>
@@ -4452,6 +4514,623 @@ async function aiGenerateQuiz() {
     quizSetStatus('ad-quiz-ai-status', '✅ AI đã tạo ' + res.added + ' câu mới' + (res.dup ? ' (bỏ ' + res.dup + ' câu trùng với đề hiện có)' : '') + '. Đề hiện có ' + res.total + ' câu. Kiểm tra lại đáp án đúng rồi bấm Lưu bài đăng.', true);
   } catch (e) {
     quizSetStatus('ad-quiz-ai-status', 'AI lỗi: ' + (e.message || e) + '. Kiểm tra key Gemini rồi bấm lại.', false);
+  }
+}
+
+    </script>
+    <script>
+
+    /* V16: nếu thiết bị đang bật Giảm chuyển động, code nền vũ trụ gốc
+       cố tình chỉ vẽ sao tĩnh, không chạy sao băng/phi thuyền. Báo rõ
+       cho người dùng ở bong bóng Bit thay vì để họ tưởng nền bị hỏng. */
+    (function () {
+      try {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches && localStorage.getItem('hoangpro_space_on') !== '0') {
+          setTimeout(function () {
+            var tip = document.getElementById('ai-bot-tip');
+            if (tip) tip.textContent = '⚠️ Thiết bị đang bật Giảm chuyển động nên nền vũ trụ chỉ hiện sao tĩnh, không có sao băng/phi thuyền. Tắt Giảm chuyển động trong cài đặt thiết bị rồi tải lại trang để xem chuyển động.';
+          }, 2500);
+        }
+      } catch (e) {}
+    })();
+
+    </script>
+    <script>
+/* ============================================================
+   V17 — QUIZ: 200 CÂU, TÓM TẮT CẢI TIẾN, MÀU ĐÚNG XANH DƯƠNG /
+   SAI ĐỎ, HIỆN ĐÁP ÁN CUỐI BÀI, TỰ CHUYỂN CÂU, CÀI ĐẶT THỜI GIAN
+   - Số câu: AI tạo tối đa 200 câu (nhập số, không còn giới hạn
+     dropdown 40), tạo theo lô 20 câu/lần để không vượt giới hạn
+     token đầu ra của Gemini; giải thích rút ngắn tối đa 20 từ để
+     đề dài đỡ vượt giới hạn ô Google Sheet (xem cảnh báo ở savePost).
+   - Tóm tắt: localSummaryForPost cũ trả về đúng tiêu đề khi bài
+     không có nội dung (đặc biệt là đề thi, vì đề thi không có ô
+     nội dung), nên nhìn như AI không gợi ý. Nay: đề thi thì tóm
+     tắt từ số câu + chủ đề, bài học thì từ nội dung/tài liệu, và
+     khi chưa có key Gemini thì trạng thái nói rõ cách cài key
+     (mở Bit góc trái dưới) thay vì chỉ nói "chưa dùng AI".
+   - Màu: đáp án đúng = xanh dương (blue-500/bg-blue-50/text-blue-600),
+     sai = đỏ (như cũ). Sơ đồ câu hỏi, hộp phản hồi và phần xem lại
+     đều đổi từ xanh lá sang xanh dương cho câu đúng.
+   - Hiện đáp án: mặc định "Chỉ hiện đáp án khi làm xong toàn bài".
+     Khi đó xác nhận xong không hiện đúng/sai/giải thích, sơ đồ chỉ
+     ghi "đã làm" (viền chàm, không tô màu đúng/sai), học sinh được
+     quay lại đổi đáp án trước khi nộp, và chỉ ở màn kết quả mới
+     hiện đầy đủ đáp án đúng/sai + giải thích với màu xanh dương/đỏ.
+     Admin có thể chọn lại "Hiện đáp án ngay sau mỗi câu" nếu muốn
+     giữ kiểu luyện tập cũ.
+   - Tự chuyển câu: xác nhận xong tự chuyển câu tiếp theo — ở chế
+     độ cuối bài thì chuyển ngay sau 0,35 giây, ở chế độ hiện ngay
+     thì hiện đáp án rồi tự chuyển sau 3 giây (vẫn có nút chuyển ngay).
+     Câu cuối xác nhận xong tự hiện kết quả, không cần bấm thêm.
+   - Thời gian: admin nhập số phút (0 = không giới hạn, tùy chọn).
+     Khi làm bài, đồng hồ đếm ngược thời gian còn lại, dưới 2 phút
+     chuyển đỏ, hết giờ hệ thống tự nộp bài và ghi rõ "Hết giờ".
+   ============================================================ */
+function quizShowMode(post) {
+  const m = post && post.quizShowAnswers;
+  return m === 'each' ? 'each' : 'end';
+}
+function quizTimeLimitMin(post) {
+  const n = post ? Number(post.quizTimeLimit) : 0;
+  return (isNaN(n) || n < 0) ? 0 : Math.floor(n);
+}
+function normPosts(rows) {
+  return rows.map(p => {
+    let qs = [];
+    try { qs = typeof p.questions === 'string' && p.questions.trim() ? JSON.parse(p.questions) : (Array.isArray(p.questions) ? p.questions : []); } catch (e) { qs = []; }
+    if (Array.isArray(qs)) qs = qs.map(q => Array.isArray(q) ? { q: q[0], options: q[1] || [], answer: q[2], explain: q[3] || '' } : { q: q.q || q.question || '', options: q.options || [], answer: Number(q.answer ?? q.correct ?? 0), explain: q.explain || q.explanation || '' }).filter(q => q.q);
+    return { id: String(p.id || ''), categoryId: String(p.categoryid || p.categoryId || ''), type: (p.type || 'lesson').toLowerCase(), title: p.title || '', summary: p.summary || '', content: p.content || '', questions: qs, sortOrder: Number(p.sortorder || p.sortOrder || p.order || 0) || 0, icon: p.icon || '', attachmentType: p.attachmenttype || p.attachmentType || '', attachmentUrl: p.attachmenturl || p.attachmentUrl || '', attachmentName: p.attachmentname || p.attachmentName || '', attachments: p.attachments || '', createdAt: p.createdat || p.createdAt || '', updatedAt: p.updatedat || p.updatedAt || '', quizShowAnswers: p.quizshowanswers || p.quizShowAnswers || 'end', quizTimeLimit: Number(p.quiztimelimit || p.quiztimelimitminutes || p.quizTimeLimit || 0) || 0 };
+  }).filter(p => p.id && p.title);
+}
+function localSummaryForPost() {
+  const type = (document.getElementById('ad-post-type') || {}).value;
+  const title = (document.getElementById('ad-post-title') || {}).value.trim();
+  if (type === 'quiz') {
+    const n = (typeof quizDraft !== 'undefined' ? quizDraft.length : 0);
+    if (n) return 'Đề trắc nghiệm ' + title + ' gồm ' + n + ' câu hỏi, mỗi câu 4 đáp án, làm lần lượt từng câu và xác nhận đáp án trước khi sang câu tiếp theo.';
+    return 'Đề trắc nghiệm ' + title + ' — làm lần lượt từng câu, xác nhận đáp án trước khi sang câu tiếp theo, đáp án chỉ hiện khi làm xong toàn bài.';
+  }
+  const text = stripHtmlToText((document.getElementById('ad-post-content') || {}).value || '');
+  if (text) {
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+    let out = sentences.slice(0, 2).join(' ');
+    if (out.length > 160) out = out.slice(0, 157).trim() + '…';
+    return out;
+  }
+  const atts = collectAttachments();
+  if (title && atts.length) return 'Bài học ' + title + ' với ' + atts.length + ' tài liệu đính kèm: ' + atts.map(a => a.name || attachBadge(a.type)).join(', ') + '.';
+  if (title) return 'Bài học ' + title + '.';
+  return '';
+}
+async function suggestPostSummary(force) {
+  const inp = document.getElementById('ad-post-summary'); if (!inp) return;
+  if (!force && inp.value.trim()) return;
+  const title = (document.getElementById('ad-post-title') || {}).value.trim();
+  const type = (document.getElementById('ad-post-type') || {}).value;
+  if (!title && !stripHtmlToText((document.getElementById('ad-post-content') || {}).value || '')) { summarySetStatus('Nhập tiêu đề hoặc nội dung trước, rồi bấm gợi ý tóm tắt.', false); return; }
+  const local = localSummaryForPost();
+  if (typeof aiHasKey !== 'function' || !aiHasKey() || typeof aiFetchRotating !== 'function') {
+    if (local) { inp.value = local; summarySetStatus('Tóm tắt tự động từ nội dung/đề (chưa có key Gemini nên chưa dùng AI thật). Muốn AI viết tóm tắt: bấm Bit ở góc trái dưới để cài key Gemini, rồi bấm lại “AI gợi ý tóm tắt”.', null); }
+    else summarySetStatus('Chưa đủ nội dung để gợi ý tóm tắt.', false);
+    return;
+  }
+  summarySetStatus('AI đang đọc tiêu đề + nội dung để viết tóm tắt…', null);
+  try {
+    const model = (typeof AI_TEXT_MODELS !== 'undefined' && AI_TEXT_MODELS[0]) ? AI_TEXT_MODELS[0] : 'gemini-2.5-flash';
+    const atts = collectAttachments().map(a => (a.name || a.url) + ' (' + a.type + ')').join(', ');
+    let prompt;
+    if (type === 'quiz') {
+      const qs = (typeof quizDraft !== 'undefined' ? quizDraft : []).slice(0, 3).map(q => q.q).join(' | ');
+      prompt = 'Viết đúng 1 tóm tắt ngắn gọn bằng tiếng Việt cho đề trắc nghiệm sau, 1-2 câu, tối đa 30 từ, không thêm tiêu đề hay giải thích, chỉ trả về tóm tắt. Tiêu đề đề: "' + title + '". Số câu: ' + (typeof quizDraft !== 'undefined' ? quizDraft.length : 0) + '. Một số câu hỏi mẫu: "' + qs + '".';
+    } else {
+      prompt = 'Viết đúng 1 tóm tắt ngắn gọn bằng tiếng Việt cho bài học sau, 1-2 câu, tối đa 30 từ, không thêm tiêu đề hay giải thích, chỉ trả về tóm tắt. Tiêu đề: "' + title + '". Nội dung (đầu bài): "' + stripHtmlToText((document.getElementById('ad-post-content') || {}).value || '').slice(0, 1000) + '". Tài liệu đính kèm: "' + atts + '".';
+    }
+    const data = await aiFetchRotating(model, {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 120, temperature: 0.3 }
+    });
+    const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+    let txt = parts.map(p => p.text || '').join(' ').replace(/^["“']|["”']$/g, '').trim();
+    if (!txt) txt = local;
+    if (txt) { inp.value = txt; summarySetStatus('✅ AI (Gemini) đã gợi ý tóm tắt — bạn sửa lại rồi bấm Lưu bài.', true); }
+    else summarySetStatus('AI chưa trả về tóm tắt, đã giữ gợi ý từ nội dung.', false);
+  } catch (e) {
+    if (local) { inp.value = local; summarySetStatus('AI lỗi, đã dùng gợi ý từ nội dung thay thế.', false); }
+    else summarySetStatus('AI lỗi: ' + (e.message || e), false);
+  }
+}
+function refreshQuizSummaryIfEmpty() {
+  try {
+    const auto = document.getElementById('ad-post-auto-summary');
+    const inp = document.getElementById('ad-post-summary');
+    const typeEl = document.getElementById('ad-post-type');
+    if (auto && auto.checked && inp && !inp.value.trim() && typeEl && typeEl.value === 'quiz') {
+      const r = suggestPostSummary(false);
+      if (r && typeof r.catch === 'function') r.catch(() => {});
+    }
+  } catch (e) {}
+}
+async function aiGenerateQuiz() {
+  if (typeof aiHasKey !== 'function' || !aiHasKey() || typeof aiFetchRotating !== 'function') {
+    quizSetStatus('ad-quiz-ai-status', 'Chưa có key Gemini. Vào mục cài đặt AI (Bit) để nhập key rồi bấm lại — đề AI dùng đúng key đó, hết hạn mức sẽ tự xoay sang key khác.', false); return;
+  }
+  const topic = (document.getElementById('ad-quiz-ai-topic') || {}).value.trim() || (document.getElementById('ad-post-title') || {}).value.trim();
+  if (!topic) { quizSetStatus('ad-quiz-ai-status', 'Nhập chủ đề (hoặc tiêu đề bài đăng) trước, ví dụ: Tin học 9 Bài 1 Thế giới kĩ thuật số.', false); return; }
+  let wanted = parseInt((document.getElementById('ad-quiz-ai-count') || {}).value || '10', 10) || 10;
+  if (wanted < 1) wanted = 1; if (wanted > 200) wanted = 200;
+  const level = (document.getElementById('ad-quiz-ai-level') || {}).value || 'Hỗn hợp Nhận biết, Thông hiểu và Vận dụng';
+  const model = (typeof AI_TEXT_MODELS !== 'undefined' && AI_TEXT_MODELS[0]) ? AI_TEXT_MODELS[0] : 'gemini-2.5-flash';
+  let totalAdded = 0, batchNo = 0;
+  try {
+    while (totalAdded < wanted) {
+      batchNo++;
+      const batchCount = Math.min(20, wanted - totalAdded);
+      quizSetStatus('ad-quiz-ai-status', '🤖 AI đang tạo lô ' + batchNo + ': ' + batchCount + ' câu cho “' + topic + '” (đã có ' + totalAdded + '/' + wanted + ' câu)…', null);
+      const prompt = 'Tạo đúng ' + batchCount + ' câu hỏi trắc nghiệm bằng tiếng Việt, chủ đề: "' + topic + '", mức độ: ' + level + '. Mỗi câu có đúng 4 đáp án, chỉ 1 đáp án đúng, đáp án đúng phân bổ đều giữa A, B, C, D (không để tất cả cùng 1 chữ cái), mỗi câu có giải thích ngắn tối đa 20 từ, bám sát chương trình GDPT 2018, không trùng câu với nhau. Chỉ trả về JSON thuần, không giải thích, không markdown, đúng định dạng: [["Câu hỏi?", ["A","B","C","D"], 1, "Giải thích..."]] với chỉ số đáp án đúng 0=A, 1=B, 2=C, 3=D.';
+      const data = await aiFetchRotating(model, {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 8000, temperature: 0.7 }
+      });
+      const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+      const txt = parts.map(p => p.text || '').join(' ');
+      const arr = cleanAiQuizJson(txt);
+      if (!Array.isArray(arr)) throw new Error('AI không trả về mảng câu hỏi');
+      const questions = arr.map(q => Array.isArray(q) ? { q: q[0], options: (q[1] || []).slice(0, 4), answer: Number(q[2] || 0), explain: q[3] || '' } : { q: q.q || q.question || '', options: (q.options || []).slice(0, 4), answer: Number(q.answer ?? q.correct ?? 0), explain: q.explain || q.explanation || '' })
+        .filter(q => q.q && q.options.length === 4 && q.options.every(o => String(o).trim()) && q.answer >= 0 && q.answer <= 3);
+      if (!questions.length) throw new Error('AI trả về câu hỏi không đủ 4 đáp án ở lô ' + batchNo + ', đã giữ ' + totalAdded + ' câu trước đó');
+      const res = applyQuizImport(questions, 'AI');
+      if (!res.added) throw new Error('AI tạo toàn câu trùng với đề hiện có ở lô ' + batchNo + ', đã giữ ' + totalAdded + ' câu');
+      totalAdded += res.added;
+      refreshQuizSummaryIfEmpty();
+      if (batchNo >= 12) break;
+    }
+    quizSetStatus('ad-quiz-ai-status', '✅ AI đã tạo ' + totalAdded + '/' + wanted + ' câu mới. Đề hiện có ' + quizDraft.length + ' câu. Kiểm tra lại đáp án đúng rồi bấm Lưu bài đăng.', true);
+  } catch (e) {
+    quizSetStatus('ad-quiz-ai-status', 'AI lỗi: ' + (e.message || e) + (totalAdded ? ' Đã giữ ' + totalAdded + ' câu trước đó, bấm lại để tạo tiếp phần còn lại.' : ' Kiểm tra key Gemini rồi bấm lại.'), false);
+  }
+}
+async function savePost() {
+  const title = document.getElementById('ad-post-title').value.trim();
+  const categoryId = document.getElementById('ad-post-cat').value;
+  const type = document.getElementById('ad-post-type').value;
+  if (!title) { alert('Nhập tiêu đề bài đăng.'); return; }
+  if (!categoryId) { alert('Chọn danh mục (ví dụ Tin học 6).'); return; }
+  let questions = [];
+  if (type === 'quiz') {
+    if (!quizDraft.length) { alert('Đề thi cần ít nhất 1 câu hỏi.'); return; }
+    for (let i = 0; i < quizDraft.length; i++) {
+      const q = quizDraft[i];
+      if (!q.q.trim() || q.options.some(o => !String(o).trim())) { alert('Câu ' + (i + 1) + ' chưa đủ nội dung hoặc đáp án.'); return; }
+    }
+    questions = quizDraft;
+    const qJsonLen = JSON.stringify(questions).length;
+    if (qJsonLen > 48000 && !confirm('Đề này có ' + qJsonLen.toLocaleString() + ' ký tự, gần/vượt giới hạn 50.000 ký tự của 1 ô Google Sheet, lưu lên Sheet có thể bị cắt mất câu cuối. Vẫn lưu tiếp? Nếu bấm Hủy, hãy chia đề thành 2 đề nhỏ hơn (ví dụ 2 đề 100 câu) hoặc rút ngắn giải thích.')) return;
+  } else {
+    if (!document.getElementById('ad-post-content').value.trim() && !(document.getElementById('ad-post-attach-url') || {}).value.trim()) { alert('Bài học cần có nội dung, hoặc tài liệu đính kèm (link/file).'); return; }
+  }
+  const pendingAtt = attachDraft.filter(a => a.file && !(a.url || '').trim());
+  if (pendingAtt.length) {
+    attachSetStatus('Đang tải ' + pendingAtt.length + ' file lên Drive trước khi lưu…', null);
+    try { await uploadAllPendingAttachments(); attachSetStatus('✅ Đã tải xong file lên Drive, đang lưu bài…', true); }
+    catch (e) { alert('Chưa tải được file lên Drive: ' + (e.message || e) + '. Hãy bấm “Tải tất cả file lên Drive” để xem file nào lỗi, hoặc tự tải lên Drive rồi dán link vào dòng đó.'); return; }
+  }
+  const id = document.getElementById('ad-post-id').value || 'post-' + Date.now();
+  const item = { id: id, categoryId: categoryId, type: type, title: title, summary: document.getElementById('ad-post-summary').value.trim(), content: document.getElementById('ad-post-content').value, questions: questions, sortOrder: Number(document.getElementById('ad-post-order').value) || 0, icon: (document.getElementById('ad-post-icon') || {}).value.trim() || '', attachments: collectAttachments(), attachmentType: (collectAttachments()[0] || {}).type || '', attachmentUrl: (collectAttachments()[0] || {}).url || '', attachmentName: (collectAttachments()[0] || {}).name || '', quizShowAnswers: (document.getElementById('ad-quiz-show-answers') || {}).value || 'end', quizTimeLimit: Number((document.getElementById('ad-quiz-time-limit') || {}).value) || 0 };
+  try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'savePost', item: item }) }); } catch (e) {}
+  const old = getPost(id);
+  if (old) Object.assign(old, item); else { posts.push(item); localAddedPosts.push(item); }
+  resetPostForm(); renderCatNav(); renderCatAdmin();
+  alert('Đã lưu bài đăng “' + title + '”. Học sinh sẽ thấy ngay trong danh mục đã chọn.');
+}
+(function hookQuizSettingsV17() {
+  if (typeof editPost === 'function' && !editPost.__v17) {
+    const origEdit = editPost;
+    const wrappedEdit = function (id) {
+      origEdit(id);
+      const p = getPost(id); if (!p) return;
+      const sa = document.getElementById('ad-quiz-show-answers'); if (sa) sa.value = quizShowMode(p);
+      const tl = document.getElementById('ad-quiz-time-limit'); if (tl) tl.value = quizTimeLimitMin(p) || '';
+    };
+    wrappedEdit.__v17 = true; editPost = wrappedEdit;
+  }
+  if (typeof resetPostForm === 'function' && !resetPostForm.__v17) {
+    const origReset = resetPostForm;
+    const wrappedReset = function () {
+      origReset();
+      const sa = document.getElementById('ad-quiz-show-answers'); if (sa) sa.value = 'end';
+      const tl = document.getElementById('ad-quiz-time-limit'); if (tl) tl.value = '';
+      const cnt = document.getElementById('ad-quiz-ai-count'); if (cnt) cnt.value = '10';
+    };
+    wrappedReset.__v17 = true; resetPostForm = wrappedReset;
+  }
+})();
+function showQuizIntro(id) {
+  const p = getPost(id); if (!p) return;
+  currentQuizPostId = id;
+  const dash = document.getElementById('dashboard-view'); if (dash) dash.style.display = 'none';
+  const wrap = document.getElementById('iframe-wrapper'); if (wrap) wrap.style.display = 'none';
+  hideNewViews();
+  const view = document.getElementById('quiz-view'); if (view) view.style.display = 'block';
+  const cat = getCat(p.categoryId);
+  const mode = quizShowMode(p), limit = quizTimeLimitMin(p);
+  document.getElementById('quiz-body').innerHTML = '<div class="bg-white rounded-[2rem] border p-6 sm:p-8 shadow-sm text-center max-w-2xl mx-auto">'
+    + '<p class="text-[11px] font-black text-indigo-500 uppercase">' + escHtml(cat ? cat.name : '') + ' · Đề thi trắc nghiệm</p>'
+    + '<h3 class="text-xl font-black text-slate-800 mt-2">' + escHtml(p.title) + '</h3>'
+    + '<p class="text-sm text-slate-500 leading-relaxed mt-3">' + escHtml(p.summary || '') + '</p>'
+    + '<div class="grid grid-cols-3 gap-3 my-6 text-center"><div class="bg-indigo-50 rounded-2xl p-3"><p class="text-xl font-black text-indigo-700">' + p.questions.length + '</p><p class="text-[11px] font-bold text-slate-500">Câu hỏi</p></div><div class="bg-indigo-50 rounded-2xl p-3"><p class="text-xl font-black text-indigo-700">4</p><p class="text-[11px] font-bold text-slate-500">Đáp án / câu</p></div><div class="bg-indigo-50 rounded-2xl p-3"><p class="text-xl font-black text-indigo-700">' + (limit ? limit + ' phút' : 'Không giới hạn') + '</p><p class="text-[11px] font-bold text-slate-500">Thời gian</p></div></div>'
+    + '<p class="text-xs text-slate-500 leading-relaxed bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left">📌 <b>Cách làm:</b> Mỗi lần chỉ hiện <b>1 câu</b>. Chọn 1 đáp án rồi bấm <b>“Xác nhận đáp án”</b> — hệ thống sẽ <b>tự chuyển sang câu tiếp theo</b>' + (mode === 'end' ? ', <b>đáp án đúng/sai và giải thích chỉ hiện khi bạn làm xong toàn bài</b>' : ', <b>đáp án sẽ hiện ngay rồi tự chuyển sau 3 giây</b>') + '. Không được nhảy cóc sang câu chưa làm, nhưng được quay lại câu đã làm để đổi đáp án trước khi nộp.' + (limit ? ' <b>Hết ' + limit + ' phút, hệ thống tự nộp bài.</b>' : '') + ' Hết câu cuối sẽ hiện kết quả và phần xem lại với màu <b class="text-blue-600">xanh dương = đúng</b>, <b class="text-red-500">đỏ = sai</b>.</p>'
+    + '<button onclick="startQuiz()" class="mt-6 w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95">▶ Bắt đầu làm bài</button>'
+    + '<div class="mt-3"><button onclick="showCategoryView(\'' + escAttr(p.categoryId) + '\')" class="text-xs font-bold text-slate-600 hover:text-indigo-600">← Quay lại danh sách</button></div></div>';
+  const sc = document.getElementById('scrollable-content'); if (sc) sc.scrollTo({ top: 0 });
+}
+function startQuiz() {
+  const p = getPost(currentQuizPostId); if (!p || !p.questions.length) { alert('Đề thi này chưa có câu hỏi.'); return; }
+  stopQuizTimer();
+  const limit = quizTimeLimitMin(p);
+  quizState = { post: p, qs: p.questions, idx: 0, picked: Array(p.questions.length).fill(null), confirmed: Array(p.questions.length).fill(false), startedAt: Date.now(), mode: quizShowMode(p), timeLimit: limit, endsAt: limit ? Date.now() + limit * 60000 : 0, timeUp: false, autoNextTimer: null };
+  quizTimer = setInterval(() => {
+    const el = document.getElementById('quiz-clock'); if (!el || !quizState) return;
+    if (quizState.timeLimit) {
+      const remain = Math.max(0, quizState.endsAt - Date.now());
+      const s = Math.ceil(remain / 1000);
+      el.innerText = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+      el.style.color = remain < 120000 ? '#dc2626' : '';
+      if (remain <= 0) { quizState.timeUp = true; finishQuiz(); return; }
+    } else {
+      const s = Math.floor((Date.now() - quizState.startedAt) / 1000);
+      el.innerText = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+  }, 1000);
+  renderQuiz();
+}
+function stopQuizTimer() {
+  if (typeof quizState !== 'undefined' && quizState && quizState.autoNextTimer) { clearTimeout(quizState.autoNextTimer); quizState.autoNextTimer = null; }
+  if (quizTimer) { clearInterval(quizTimer); quizTimer = null; }
+}
+function selectQuizOption(i) {
+  if (!quizState) return;
+  if (quizState.confirmed[quizState.idx] && quizState.mode !== 'end') return;
+  quizState.picked[quizState.idx] = i;
+  if (quizState.mode === 'end' && quizState.confirmed[quizState.idx]) quizState.confirmed[quizState.idx] = false;
+  renderQuiz();
+}
+function confirmQuizAnswer() {
+  if (!quizState || quizState.picked[quizState.idx] === null) { alert('Hãy chọn 1 đáp án trước khi xác nhận.'); return; }
+  const atIdx = quizState.idx, total = quizState.qs.length;
+  quizState.confirmed[atIdx] = true; renderQuiz();
+  if (quizState.autoNextTimer) clearTimeout(quizState.autoNextTimer);
+  if (quizState.mode === 'end') {
+    quizState.autoNextTimer = setTimeout(() => {
+      if (!quizState || quizState.idx !== atIdx || !quizState.confirmed[atIdx]) return;
+      if (atIdx < total - 1) { quizState.idx++; renderQuiz(); } else finishQuiz();
+    }, 350);
+  } else {
+    quizState.autoNextTimer = setTimeout(() => {
+      if (!quizState || quizState.idx !== atIdx || !quizState.confirmed[atIdx]) return;
+      quizNext();
+    }, 3000);
+  }
+}
+function quizNext() {
+  if (!quizState || !quizState.confirmed[quizState.idx]) { alert('Hãy xác nhận đáp án câu này trước.'); return; }
+  if (quizState.autoNextTimer) { clearTimeout(quizState.autoNextTimer); quizState.autoNextTimer = null; }
+  if (quizState.idx < quizState.qs.length - 1) { quizState.idx++; renderQuiz(); } else finishQuiz();
+}
+function quizGoTo(i) {
+  if (!quizState) return;
+  if (quizState.autoNextTimer) { clearTimeout(quizState.autoNextTimer); quizState.autoNextTimer = null; }
+  if (i > quizState.idx && !quizState.confirmed[quizState.idx]) { alert('Hãy chọn đáp án và bấm “Xác nhận đáp án” cho câu hiện tại trước khi sang câu khác.'); return; }
+  if (i > quizState.idx) { alert('Đề làm lần lượt: bạn chỉ được xem lại các câu đã làm, không nhảy tới câu chưa làm.'); return; }
+  quizState.idx = i; renderQuiz();
+}
+function renderQuiz() {
+  const st = quizState; if (!st) return;
+  const q = st.qs[st.idx], total = st.qs.length, done = st.confirmed.filter(Boolean).length;
+  const picked = st.picked[st.idx], isConfirmed = st.confirmed[st.idx];
+  const showNow = st.mode === 'each';
+  const letters = ['A', 'B', 'C', 'D'];
+  let opts = '';
+  q.options.forEach((op, i) => {
+    let cls = 'border-slate-200 bg-white hover:border-indigo-400';
+    if (picked === i && !isConfirmed) cls = 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200';
+    if (showNow && isConfirmed && i === q.answer) cls = 'border-blue-500 bg-blue-50';
+    if (showNow && isConfirmed && picked === i && picked !== q.answer) cls = 'border-red-500 bg-red-50';
+    if (!showNow && isConfirmed && picked === i) cls = 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200';
+    const disabled = (showNow && isConfirmed) ? 'disabled' : 'onclick="selectQuizOption(' + i + ')"';
+    opts += '<button ' + disabled + ' class="quiz-opt w-full text-left flex gap-3 p-3.5 sm:p-4 border-2 rounded-2xl text-sm font-semibold text-slate-700 ' + cls + '"><span class="w-7 h-7 shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-xs font-black">' + letters[i] + '</span><span class="flex-1">' + escHtml(op) + '</span>' + (showNow && isConfirmed && i === q.answer ? '<span class="text-blue-600 font-black text-xs">✓ Đáp án đúng</span>' : '') + (showNow && isConfirmed && picked === i && picked !== q.answer ? '<span class="text-red-500 font-black text-xs">✕ Bạn chọn</span>' : '') + (!showNow && isConfirmed && picked === i ? '<span class="text-indigo-600 font-black text-xs">✓ Đã chọn</span>' : '') + '</button>';
+  });
+  let palette = '';
+  st.qs.forEach((_, i) => {
+    let cls = 'bg-slate-100 text-slate-500';
+    if (showNow && st.confirmed[i]) cls = st.picked[i] === st.qs[i].answer ? 'bg-blue-500 text-white' : 'bg-red-400 text-white';
+    if (!showNow && st.confirmed[i]) cls = 'bg-white border-2 border-indigo-600 text-indigo-700';
+    if (i === st.idx) cls += ' ring-2 ring-indigo-600 ring-offset-1';
+    palette += '<button onclick="quizGoTo(' + i + ')" class="w-8 h-8 rounded-lg text-[11px] font-black ' + cls + '">' + (i + 1) + '</button>';
+  });
+  const clockLabel = st.timeLimit ? '⏱ Còn lại' : '⏱ Đã làm';
+  document.getElementById('quiz-body').innerHTML = '<div class="max-w-3xl mx-auto">'
+    + '<div class="flex items-center justify-between gap-2 mb-3"><button onclick="showCategoryView(\'' + escAttr(st.post.categoryId) + '\')" class="text-xs font-bold text-white">← Thoát đề</button><span class="text-xs font-black text-slate-200">' + clockLabel + ' <span id="quiz-clock">00:00</span>' + (st.timeLimit ? ' / ' + st.timeLimit + ' phút' : '') + ' · Đã xác nhận ' + done + '/' + total + ' câu</span></div>'
+    + '<div class="h-2.5 bg-slate-200 rounded-full overflow-hidden mb-4"><div class="h-full bg-indigo-600 transition-all" style="width:' + Math.round(done / total * 100) + '%"></div></div>'
+    + '<div class="bg-white rounded-[2rem] border p-5 sm:p-7 shadow-sm"><p class="text-[11px] font-black text-indigo-500 uppercase">Câu ' + (st.idx + 1) + ' / ' + total + ' · ' + escHtml(st.post.title) + '</p>'
+    + '<h3 class="text-base sm:text-lg font-bold text-slate-800 leading-relaxed mt-2">' + escHtml(q.q) + '</h3>'
+    + '<div class="space-y-2.5 mt-5">' + opts + '</div>'
+    + (showNow && isConfirmed ? '<div class="mt-5 p-4 rounded-2xl ' + (picked === q.answer ? 'bg-blue-50 border border-blue-200 text-blue-800' : 'bg-red-50 border border-red-200 text-red-800') + ' text-sm leading-relaxed"><b>' + (picked === q.answer ? '✅ Chính xác!' : '❌ Chưa đúng. Đáp án đúng là ' + letters[q.answer] + '.') + '</b>' + (q.explain ? '<br><span>' + escHtml(q.explain) + '</span>' : '') + '<br><span class="text-xs font-semibold opacity-80">Tự chuyển câu tiếp theo sau 3 giây — bấm “Câu tiếp theo” để chuyển ngay.</span></div>' : '')
+    + (!showNow && isConfirmed ? '<div class="mt-5 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-sm leading-relaxed"><b>Đã ghi nhận đáp án câu này.</b> Đáp án đúng/sai và giải thích sẽ hiện khi bạn làm xong toàn bài.</div>' : '')
+    + (!isConfirmed ? '<p class="text-xs text-slate-400 font-semibold mt-4">👉 Chọn 1 đáp án, rồi bấm “Xác nhận đáp án”' + (showNow ? ' để xem đúng/sai, rồi hệ thống tự chuyển câu sau 3 giây.' : ' — hệ thống sẽ tự chuyển sang câu tiếp theo, đáp án chỉ hiện khi làm xong toàn bài.') + '</p>' : '')
+    + '<div class="flex flex-wrap gap-2 mt-5">' + (!isConfirmed ? '<button ' + (picked === null ? 'disabled' : 'onclick="confirmQuizAnswer()"') + ' class="btn btn-primary flex-1 min-w-[180px] py-3.5 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm">✓ Xác nhận đáp án</button>' : '') + (isConfirmed ? (st.idx < total - 1 ? '<button onclick="quizNext()" class="btn btn-primary flex-1 min-w-[180px] py-3.5 text-white rounded-2xl font-black text-sm">Câu tiếp theo →</button>' : '<button onclick="finishQuiz()" class="btn btn-primary flex-1 min-w-[180px] py-3.5 text-white rounded-2xl font-black text-sm">🏁 Xem kết quả</button>') : '') + '</div></div>'
+    + '<div class="bg-white rounded-2xl border p-4 mt-4"><p class="text-[11px] font-black text-slate-600 uppercase mb-2">Sơ đồ câu hỏi — ' + (showNow ? 'xanh dương: đúng, đỏ: sai, xám: chưa làm' : 'viền chàm: đã làm, xám: chưa làm (đáp án chỉ hiện khi làm xong)') + ' (chỉ xem lại câu đã làm)</p><div class="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1">' + palette + '</div></div></div>';
+}
+function finishQuiz() {
+  const st = quizState; if (!st) return;
+  stopQuizTimer();
+  const total = st.qs.length;
+  const score = st.qs.reduce((s, q, i) => s + (st.picked[i] === q.answer ? 1 : 0), 0);
+  const pct = total ? Math.round(score / total * 100) : 0;
+  const rank = pct >= 90 ? '🏆 Xuất sắc' : pct >= 75 ? '🥇 Giỏi' : pct >= 50 ? '🥈 Khá' : '📚 Cần ôn thêm';
+  const letters = ['A', 'B', 'C', 'D'];
+  const mins = Math.max(0, Math.round((Date.now() - st.startedAt) / 60000));
+  try {
+    const res = { id: 'res-' + Date.now(), username: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : 'Khách', postId: st.post.id, postTitle: st.post.title, score: score, total: total, percent: pct, answers: st.picked, finishedAt: new Date().toISOString() };
+    localStorage.setItem('hoangpro_last_quiz_result', JSON.stringify(res));
+    if (typeof gasApiUrl !== 'undefined') fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveQuizResult', result: res }) }).catch(() => {});
+  } catch (e) {}
+  let review = '';
+  st.qs.forEach((q, i) => {
+    const ok = st.picked[i] === q.answer;
+    review += '<div class="bg-white border rounded-2xl p-4 text-left"><p class="text-sm font-bold text-slate-800">Câu ' + (i + 1) + ': ' + escHtml(q.q) + '</p><p class="text-xs mt-2 ' + (ok ? 'text-blue-600' : 'text-red-500') + ' font-bold">' + (ok ? '✅ Đúng' : '❌ Sai') + ' — Bạn chọn: ' + (st.picked[i] === null ? '—' : letters[st.picked[i]] + '. ' + escHtml(q.options[st.picked[i]])) + ' · Đáp án đúng: ' + letters[q.answer] + '. ' + escHtml(q.options[q.answer]) + '</p>' + (q.explain ? '<p class="text-xs text-slate-500 mt-1">💡 ' + escHtml(q.explain) + '</p>' : '') + '</div>';
+  });
+  document.getElementById('quiz-body').innerHTML = '<div class="max-w-3xl mx-auto text-center"><div class="bg-white rounded-[2rem] border p-6 sm:p-8 shadow-sm">'
+    + (st.timeUp ? '<p class="text-sm font-black text-red-600 bg-red-50 border border-red-200 rounded-2xl p-3 mb-4">⏰ Hết giờ — hệ thống đã tự nộp bài.</p>' : '')
+    + '<p class="text-4xl">🎉</p><h3 class="text-xl font-black text-slate-800 mt-2">Kết quả: ' + score + ' / ' + total + ' câu đúng (' + pct + '%)</h3><p class="font-black text-indigo-600 mt-1">' + rank + '</p>'
+    + '<p class="text-xs text-slate-500 mt-2">' + escHtml(st.post.title) + ' · Thời gian làm bài khoảng ' + mins + ' phút' + (st.timeLimit ? ' / giới hạn ' + st.timeLimit + ' phút' : '') + ' · Kết quả đã lưu (xem trong Sheet quizResults nếu đã triển khai App Script mới).</p>'
+    + '<div class="flex flex-wrap justify-center gap-2 mt-5"><button onclick="startQuiz()" class="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm active:scale-95">🔄 Làm lại đề này</button><button onclick="showCategoryView(\'' + escAttr(st.post.categoryId) + '\')" class="px-6 py-3 bg-slate-100 rounded-2xl font-black text-sm active:scale-95">← Về danh mục</button></div></div>'
+    + '<h4 class="text-left font-black text-slate-700 text-sm uppercase mt-6 mb-3">Xem lại từng câu — xanh dương: đúng, đỏ: sai</h4><div class="space-y-3 text-left">' + review + '</div></div>';
+  quizState = null;
+  const sc = document.getElementById('scrollable-content'); if (sc) sc.scrollTo({ top: 0 });
+}
+
+    </script>
+    <script>
+/* ============================================================
+   V18 — 5 SỬA THEO PHẢN HỒI
+   1. Hiệu ứng mỗi lần nhấn chuột: mỗi lần pointerdown (kể cả bấm
+      nút, thẻ bài, link) đều hiện 1 ngôi sao bay lên + 1 vòng tròn
+      lan ra tại đúng vị trí chuột, rồi tự biến mất sau <1 giây.
+      Không chặn bấm, không chặn cuộn, tôn trọng Giảm chuyển động.
+   2. AI phân tích tên bài: trước đây chỉ thử 1 model (model đầu
+      tiên trong AI_TEXT_MODELS). Nếu model đó không tồn tại (404)
+      thì AI lỗi ngay, dù key vẫn đúng và model khác vẫn chạy được.
+      Nay thử lần lượt các model trong danh sách, model nào 404 thì
+      chuyển sang model tiếp theo, chỉ báo lỗi khi tất cả đều lỗi.
+      Prompt cũng ghi rõ: bài thuộc bộ sách Kết nối tri thức với
+      cuộc sống, chương trình GDPT 2018, thống nhất từ năm học này,
+      phân tích đúng nội dung bộ sách này, không dùng nội dung bộ
+      sách khác.
+   3. STT tự thêm: khi tạo bài mới, STT tự điền = số thứ tự lớn
+      nhất trong danh mục đó + 1; đề thi tự điền 99. Sửa bài cũ thì
+      giữ nguyên STT cũ. Admin sửa tay STT rồi thì hệ thống không
+      tự ghi đè nữa, trừ khi bấm Tạo mới.
+   4. Lỗi tải lên Drive: "Invalid Post Action" nghĩa là App Script
+      đang chạy chưa có action uploadLessonFile (bản GAS cũ trước
+      v10, hoặc deploy chưa cập nhật, URL cũ vẫn trỏ về bản cũ).
+      Nay thông báo dịch rõ nguyên nhân + cách sửa, thay vì chỉ
+      hiện "Invalid Post Action".
+   5. Ẩn thanh Mở tab mới / Tải về: bỏ hẳn thanh tiêu đề chàm của
+      tài liệu trong trang bài học (cả bài 1 tài liệu và bài nhiều
+      tài liệu dùng tab). Thanh tab ngang (v13) vẫn hiện tên file
+      và loại, nên học sinh vẫn biết đang xem tài liệu nào. Riêng
+      file nén (xem bằng cách tải về) thì vẫn giữ 1 nút tải đơn giản
+      dưới khung, không phải thanh tiêu đề cũ.
+   ============================================================ */
+(function initClickFxV18() {
+  try {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const EMOJIS = ['✦', '⭐', '💫', '✧'];
+    const COLORS = ['#facc15', '#38bdf8', '#a78bfa', '#f472b6', '#34d399'];
+    document.addEventListener('pointerdown', (e) => {
+      if (document.querySelectorAll('.click-fx-star').length > 20) return;
+      const x = e.clientX, y = e.clientY;
+      const star = document.createElement('span');
+      star.className = 'click-fx-star';
+      star.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+      star.style.left = x + 'px'; star.style.top = y + 'px';
+      star.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      document.body.appendChild(star);
+      setTimeout(() => star.remove(), 750);
+      const ring = document.createElement('span');
+      ring.className = 'click-fx-ring';
+      ring.style.left = x + 'px'; ring.style.top = y + 'px';
+      document.body.appendChild(ring);
+      setTimeout(() => ring.remove(), 650);
+    }, { passive: true });
+  } catch (e) {}
+})();
+async function aiFetchTextV18(body) {
+  const models = (typeof AI_TEXT_MODELS !== 'undefined' && AI_TEXT_MODELS.length) ? AI_TEXT_MODELS : ['gemini-2.5-flash'];
+  let lastErr = null;
+  for (let i = 0; i < models.length; i++) {
+    try {
+      const data = await aiFetchRotating(models[i], body);
+      window.__aiTextModelUsed = models[i];
+      return data;
+    } catch (e) {
+      lastErr = e;
+      const msg = String((e && (e.message || e.raw)) || '');
+      const isNotFound = (e && e.status === 404) || /not found|is not found|404/i.test(msg);
+      if (!isNotFound) throw e;
+    }
+  }
+  throw lastErr || new Error('AI lỗi: tất cả model đều không khả dụng');
+}
+const KNTT_CONTEXT = ' Bài học thuộc bộ sách Kết nối tri thức với cuộc sống, chương trình GDPT 2018, thống nhất từ năm học này. Phân tích đúng nội dung bài đó trong bộ sách này, không dùng nội dung của bộ sách khác (Chân trời sáng tạo, Cánh diều).';
+async function suggestPostSummary(force) {
+  const inp = document.getElementById('ad-post-summary'); if (!inp) return;
+  if (!force && inp.value.trim()) return;
+  const title = (document.getElementById('ad-post-title') || {}).value.trim();
+  const type = (document.getElementById('ad-post-type') || {}).value;
+  if (!title && !stripHtmlToText((document.getElementById('ad-post-content') || {}).value || '')) { summarySetStatus('Nhập tiêu đề hoặc nội dung trước, rồi bấm gợi ý tóm tắt.', false); return; }
+  const local = localSummaryForPost();
+  if (typeof aiHasKey !== 'function' || !aiHasKey() || typeof aiFetchTextV18 !== 'function') {
+    if (local) { inp.value = local; summarySetStatus('Tóm tắt tự động từ nội dung/đề (chưa có key Gemini nên chưa dùng AI thật). Muốn AI viết tóm tắt: bấm Bit ở góc trái dưới để cài key Gemini, rồi bấm lại “AI gợi ý tóm tắt”.', null); }
+    else summarySetStatus('Chưa đủ nội dung để gợi ý tóm tắt.', false);
+    return;
+  }
+  summarySetStatus('AI đang đọc tiêu đề + nội dung để viết tóm tắt…', null);
+  try {
+    const atts = collectAttachments().map(a => (a.name || a.url) + ' (' + a.type + ')').join(', ');
+    let prompt;
+    if (type === 'quiz') {
+      const qs = (typeof quizDraft !== 'undefined' ? quizDraft : []).slice(0, 3).map(q => q.q).join(' | ');
+      prompt = 'Viết đúng 1 tóm tắt ngắn gọn bằng tiếng Việt cho đề trắc nghiệm sau, 1-2 câu, tối đa 30 từ, không thêm tiêu đề hay giải thích, chỉ trả về tóm tắt.' + KNTT_CONTEXT + ' Tiêu đề đề: "' + title + '". Số câu: ' + (typeof quizDraft !== 'undefined' ? quizDraft.length : 0) + '. Một số câu hỏi mẫu: "' + qs + '".';
+    } else {
+      prompt = 'Viết đúng 1 tóm tắt ngắn gọn bằng tiếng Việt cho bài học sau, 1-2 câu, tối đa 30 từ, không thêm tiêu đề hay giải thích, chỉ trả về tóm tắt.' + KNTT_CONTEXT + ' Tiêu đề: "' + title + '". Nội dung (đầu bài): "' + stripHtmlToText((document.getElementById('ad-post-content') || {}).value || '').slice(0, 1000) + '". Tài liệu đính kèm: "' + atts + '".';
+    }
+    const data = await aiFetchTextV18({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 120, temperature: 0.3 }
+    });
+    const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+    let txt = parts.map(p => p.text || '').join(' ').replace(/^["“']|["”']$/g, '').trim();
+    if (!txt) txt = local;
+    if (txt) { inp.value = txt; summarySetStatus('✅ AI (Gemini, model ' + (window.__aiTextModelUsed || '') + ') đã gợi ý tóm tắt — bạn sửa lại rồi bấm Lưu bài.', true); }
+    else summarySetStatus('AI chưa trả về tóm tắt, đã giữ gợi ý từ nội dung.', false);
+  } catch (e) {
+    if (local) { inp.value = local; summarySetStatus('AI lỗi (' + (e.message || e) + ') — đã dùng gợi ý từ nội dung thay thế. Nếu lỗi là model không tồn tại, hệ thống đã tự thử các model khác trong danh sách.', false); }
+    else summarySetStatus('AI lỗi: ' + (e.message || e), false);
+  }
+}
+async function aiSuggestIcon(text, type) {
+  try {
+    if (typeof aiHasKey !== 'function' || !aiHasKey()) return null;
+    if (typeof aiFetchTextV18 !== 'function') return null;
+    const data = await aiFetchTextV18({
+      contents: [{ role: 'user', parts: [{ text: 'Chỉ trả về đúng 1 emoji duy nhất, không thêm chữ hay giải thích, phù hợp nhất với nội dung sau (loại: ' + type + ').' + KNTT_CONTEXT + ' Nội dung: "' + String(text).slice(0, 300) + '"' }] }],
+      generationConfig: { maxOutputTokens: 16, temperature: 0.2 }
+    });
+    const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+    const txt = parts.map(p => p.text || '').join('');
+    const m = txt.match(/\p{Extended_Pictographic}/u);
+    return m ? m[0] : null;
+  } catch (e) { return null; }
+}
+(function hookLocalIconsV18() {
+  if (typeof localSuggestIcons === 'function' && !localSuggestIcons.__v18) {
+    const orig = localSuggestIcons;
+    const wrapped = function (text, type) {
+      let t = '';
+      try { t = normIconText(text); } catch (e) { t = String(text || '').toLowerCase(); }
+      const extra = [];
+      if (/the gioi ki thuat so/.test(t)) extra.push('🌐');
+      if (/thong tin trong giai quyet/.test(t)) extra.push('💡');
+      if (/chuyen doi so/.test(t)) extra.push('🔄');
+      if (/the gioi so|du lieu so/.test(t)) extra.push('💾');
+      const origList = orig(text, type) || [];
+      return extra.concat(origList.filter(e => !extra.includes(e))).slice(0, 6);
+    };
+    wrapped.__v18 = true; localSuggestIcons = wrapped;
+  }
+})();
+function autoFillPostOrder(force) {
+  try {
+    const idEl = document.getElementById('ad-post-id');
+    if (idEl && idEl.value) return;
+    const catEl = document.getElementById('ad-post-cat');
+    const typeEl = document.getElementById('ad-post-type');
+    const orderEl = document.getElementById('ad-post-order');
+    if (!catEl || !typeEl || !orderEl) return;
+    if (!force && orderEl.value.trim() !== '' && !window.__orderAutoFilled) return;
+    if (typeEl.value === 'quiz') { orderEl.value = '99'; window.__orderAutoFilled = true; return; }
+    let max = 0;
+    (typeof posts !== 'undefined' ? posts : []).forEach(p => {
+      if (String(p.categoryId) === String(catEl.value) && p.type !== 'quiz') {
+        const n = Number(p.sortOrder) || 0;
+        if (n > max) max = n;
+      }
+    });
+    orderEl.value = String(max + 1);
+    window.__orderAutoFilled = true;
+  } catch (e) {}
+}
+(function hookOrderV18() {
+  const orderEl = document.getElementById('ad-post-order');
+  if (orderEl && !orderEl.__v18) {
+    orderEl.addEventListener('input', () => { window.__orderAutoFilled = false; });
+    orderEl.__v18 = true;
+  }
+  const catEl = document.getElementById('ad-post-cat');
+  if (catEl && !catEl.__v18) {
+    catEl.addEventListener('change', () => autoFillPostOrder(false));
+    catEl.__v18 = true;
+  }
+  if (typeof onPostTypeChange === 'function' && !onPostTypeChange.__v18) {
+    const orig = onPostTypeChange;
+    const wrapped = function () { orig(); autoFillPostOrder(false); };
+    wrapped.__v18 = true; onPostTypeChange = wrapped;
+  }
+  if (typeof resetPostForm === 'function' && !resetPostForm.__v18b) {
+    const origReset = resetPostForm;
+    const wrappedReset = function () { origReset(); autoFillPostOrder(true); };
+    wrappedReset.__v18b = true; resetPostForm = wrappedReset;
+  }
+})();
+async function uploadOneFile(file) {
+  const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+  const base64 = String(dataUrl).split(',')[1] || '';
+  const res = await fetch(gasApiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'uploadLessonFile', file: { name: file.name, mime: file.type || '', data: base64 } }) });
+  const data = await res.json();
+  if (data && data.success && data.url) return data.url;
+  const rawErr = (data && data.error) || 'App Script chưa có action uploadLessonFile';
+  if (/Invalid Post Action/i.test(rawErr)) {
+    throw new Error('App Script đang chạy chưa có chức năng tải file lên Drive (bản GAS cũ trước v10, hoặc deploy chưa cập nhật nên URL cũ vẫn trỏ về bản cũ). Hãy dán đè file App Script mới nhất (18.APP_SCRIPT.js), Deploy > New version (giữ URL cũ), tải lại trang rồi thử lại. Tạm thời: tải file lên Drive thủ công, chia sẻ “Bất kỳ ai có link đều xem được”, rồi dán link vào dòng tài liệu.');
+  }
+  throw new Error(rawErr);
+}
+function attachSectionHtml(a) {
+  const type = a.type || attachDetectType(a.url, a.name);
+  let body = attachBodyHtml(a);
+  if (type === 'zip') {
+    body += '<div class="p-4 bg-white text-center"><a href="' + escAttr(attachDownloadUrl(a)) + '" target="_blank" rel="noopener" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black">⬇ Tải file nén về</a></div>';
+    return '<div class="attach-section">' + body + '</div>';
+  }
+  return '<div class="attach-section">' + body + '<p class="text-[11px] text-slate-500 font-semibold px-4 py-2 bg-white">Nếu khung trên trống (trang nguồn chặn nhúng), file vẫn xem được khi mở trực tiếp từ nguồn gốc.</p></div>';
+}
+async function aiGenerateQuiz() {
+  if (typeof aiHasKey !== 'function' || !aiHasKey() || typeof aiFetchTextV18 !== 'function') {
+    quizSetStatus('ad-quiz-ai-status', 'Chưa có key Gemini. Vào mục cài đặt AI (Bit) để nhập key rồi bấm lại — đề AI dùng đúng key đó, hết hạn mức sẽ tự xoay sang key khác.', false); return;
+  }
+  const topic = (document.getElementById('ad-quiz-ai-topic') || {}).value.trim() || (document.getElementById('ad-post-title') || {}).value.trim();
+  if (!topic) { quizSetStatus('ad-quiz-ai-status', 'Nhập chủ đề (hoặc tiêu đề bài đăng) trước, ví dụ: Tin học 9 Bài 1 Thế giới kĩ thuật số.', false); return; }
+  let wanted = parseInt((document.getElementById('ad-quiz-ai-count') || {}).value || '10', 10) || 10;
+  if (wanted < 1) wanted = 1; if (wanted > 200) wanted = 200;
+  const level = (document.getElementById('ad-quiz-ai-level') || {}).value || 'Hỗn hợp Nhận biết, Thông hiểu và Vận dụng';
+  let totalAdded = 0, batchNo = 0;
+  try {
+    while (totalAdded < wanted) {
+      batchNo++;
+      const batchCount = Math.min(20, wanted - totalAdded);
+      quizSetStatus('ad-quiz-ai-status', '🤖 AI đang tạo lô ' + batchNo + ': ' + batchCount + ' câu cho “' + topic + '” (đã có ' + totalAdded + '/' + wanted + ' câu)…', null);
+      const prompt = 'Tạo đúng ' + batchCount + ' câu hỏi trắc nghiệm bằng tiếng Việt, chủ đề: "' + topic + '", mức độ: ' + level + '.' + KNTT_CONTEXT + ' Mỗi câu có đúng 4 đáp án, chỉ 1 đáp án đúng, đáp án đúng phân bổ đều giữa A, B, C, D (không để tất cả cùng 1 chữ cái), mỗi câu có giải thích ngắn tối đa 20 từ, bám sát chương trình GDPT 2018, không trùng câu với nhau. Chỉ trả về JSON thuần, không giải thích, không markdown, đúng định dạng: [["Câu hỏi?", ["A","B","C","D"], 1, "Giải thích..."]] với chỉ số đáp án đúng 0=A, 1=B, 2=C, 3=D.';
+      const data = await aiFetchTextV18({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 8000, temperature: 0.7 }
+      });
+      const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+      const txt = parts.map(p => p.text || '').join(' ');
+      const arr = cleanAiQuizJson(txt);
+      if (!Array.isArray(arr)) throw new Error('AI không trả về mảng câu hỏi');
+      const questions = arr.map(q => Array.isArray(q) ? { q: q[0], options: (q[1] || []).slice(0, 4), answer: Number(q[2] || 0), explain: q[3] || '' } : { q: q.q || q.question || '', options: (q.options || []).slice(0, 4), answer: Number(q.answer ?? q.correct ?? 0), explain: q.explain || q.explanation || '' })
+        .filter(q => q.q && q.options.length === 4 && q.options.every(o => String(o).trim()) && q.answer >= 0 && q.answer <= 3);
+      if (!questions.length) throw new Error('AI trả về câu hỏi không đủ 4 đáp án ở lô ' + batchNo + ', đã giữ ' + totalAdded + ' câu trước đó');
+      const res = applyQuizImport(questions, 'AI');
+      if (!res.added) throw new Error('AI tạo toàn câu trùng với đề hiện có ở lô ' + batchNo + ', đã giữ ' + totalAdded + ' câu');
+      totalAdded += res.added;
+      refreshQuizSummaryIfEmpty();
+      if (batchNo >= 12) break;
+    }
+    quizSetStatus('ad-quiz-ai-status', '✅ AI đã tạo ' + totalAdded + '/' + wanted + ' câu mới. Đề hiện có ' + quizDraft.length + ' câu. Kiểm tra lại đáp án đúng rồi bấm Lưu bài đăng.', true);
+  } catch (e) {
+    quizSetStatus('ad-quiz-ai-status', 'AI lỗi: ' + (e.message || e) + (totalAdded ? ' Đã giữ ' + totalAdded + ' câu trước đó, bấm lại để tạo tiếp phần còn lại.' : ' Kiểm tra key Gemini rồi bấm lại.'), false);
   }
 }
 
