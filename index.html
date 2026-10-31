@@ -474,7 +474,7 @@
         @media (prefers-reduced-motion: reduce) { .btn, .auth-tab, .forgot-link { transition: none; } .btn::after { display: none; } }
     
         /* ===== V12: FOOTER BẢN QUYỀN ===== */
-        #site-footer { text-align: center; padding: 22px 16px 28px; font-size: 13px; font-weight: 700; line-height: 1.7; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,.14); margin-top: 24px; }
+        #site-footer { text-align: center; padding: 10px 16px 12px; font-size: 13px; font-weight: 700; line-height: 1.4; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,.14); margin-top: 12px; }
         #site-footer a { color: #a5b4fc; text-decoration: none; }
         #site-footer a:hover { color: #c7d2fe; text-decoration: underline; }
         body.space-off #site-footer { color: #475569; border-top-color: #e2e8f0; }
@@ -577,8 +577,8 @@
         </button>
     </div>
 
-    <header class="bg-white border-b h-16 flex items-center justify-between px-4 sm:px-6 z-50 shadow-sm relative">
-        <div class="flex items-center gap-3">
+    <header class="bg-white border-b h-12 flex items-center justify-between px-3 sm:px-4 z-50 shadow-sm relative">
+        <div class="flex items-center gap-2">
             <button onclick="toggleSidebar()" class="text-slate-500 hover:text-indigo-600 focus:outline-none transition-transform hover:scale-110 active:scale-95" title="Ẩn/Hiện Menu">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
@@ -587,7 +587,7 @@
                 <span class="font-extrabold text-lg sm:text-xl tracking-tight text-slate-800 uppercase hidden sm:block group-hover:text-indigo-600 transition-colors">WWW.HOANGPRO.NAME.VN</span>
             </div>
         </div>
-        <div class="flex items-center gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-3">
             <div id="user-bar" class="hidden flex items-center gap-2 sm:gap-3">
                 <button onclick="showDashboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase transition-all active:scale-95 flex items-center gap-1 shadow-sm hover:shadow">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
@@ -631,6 +631,7 @@
                 <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 <span>Truy cập nhanh</span>
             </p>
+            <div id="login-required-note" class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 mb-3 text-[11px] font-bold text-amber-800 text-center">🔒 Hãy đăng nhập để chọn và xem nội dung các menu bên trái</div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-1 px-1">📂 Danh mục học tập</p>
             <div id="cat-nav" class="space-y-1 mb-3"></div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">🔗 Menu liên kết cũ</p>
@@ -997,6 +998,10 @@
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Giá riêng cho menu này (Xu)</label>
                             <input type="number" id="ad-sprice" min="0" step="1" placeholder="Trống = giá chung" class="w-full p-3 border rounded-xl text-sm bg-white mt-1">
                         </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Menu cha (để trống = menu gốc, chỉ chọn menu gốc làm cha)</label>
+                            <select id="ad-sparent" class="w-full p-3 border rounded-xl text-sm bg-white mt-1 font-bold text-indigo-600"><option value="">(Không có — menu gốc)</option></select>
+                        </div>
                         <button onclick="saveSidebar()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm h-[46px] shadow-md active:scale-95 transition-all">LƯU MENU</button>
                     </div>
                     <table class="w-full">
@@ -1006,6 +1011,7 @@
                                 <th>URL</th>
                                 <th>Ảnh</th>
                                 <th>Chế độ phí riêng</th>
+                                <th>Menu cha</th>
                                 <th class="text-right">Thao tác</th>
                             </tr>
                         </thead>
@@ -5531,6 +5537,333 @@ function editCategory(id) {
   const pr = document.getElementById('ad-cat-price'); if (pr) pr.value = (c.price !== undefined && c.price !== null) ? c.price : '';
   document.getElementById('modal-admin').classList.add('active');
 }
+
+    </script>
+    <script>
+/* ============================================================
+   V24 — MENU LIÊN KẾT CŨ: SUBMENU CHA/CON, TÍNH PHÍ THEO SUBMENU
+   Trước v24, menu liên kết cũ (sidebarItems) là danh sách phẳng:
+   mỗi mục có id, name, url, image, type, feemode, price, không có
+   cha/con, và menu trái render phẳng.
+   V24 thêm đúng 1 cấp cha/con, giống menu học tập (Tin học >
+   Tin học 6/7/8/9), nhưng KHÔNG thay đổi cơ chế tính phí cũ:
+   - Sheet sidebarItems thêm cột 8 parentId (cuối, không chèn).
+     Mục không có parentId (hoặc parentId trỏ tới mục không tồn
+     tại) là menu gốc. Mục có parentId là submenu của menu đó.
+     Chỉ cho chọn menu gốc làm cha trong form Admin, nên cấu trúc
+     tối đa 2 cấp, không có cháu.
+   - Menu trái (#side-nav): menu gốc hiện kèm nút ▾/▸ để mở/đóng
+     danh sách submenu của nó (mặc định mở, giống menu học tập).
+     Submenu thụt vào trong, hiện nhãn Free / Đã Mua / giá giống
+     menu cũ (nhãn này đã được hàm render() gốc tạo sẵn).
+   - Tính phí theo từng submenu: bấm submenu nào thì chạy đúng
+     cổng tính phí cũ (handleOpenLink) của chính mục đó, với
+     feemode/price riêng của nó, lượt miễn phí riêng, gói tháng/
+     1 năm riêng theo id của nó. Mua menu gốc KHÔNG mở submenu,
+     và mua submenu cũng KHÔNG mở menu gốc hay submenu khác.
+   - Grid trang chủ (#grid-links) giữ nguyên danh sách phẳng, vì
+     đó là lưới thẻ, không phải menu trái.
+   Cách làm: KHÔNG viết lại hàm render() gốc (nó còn làm nhiều
+   việc khác: user-bar, bảng giá, grid, bảng Admin...). V24 chỉ
+   bọc render(): sau khi render() gốc tạo xong menu phẳng, V24
+   sắp xếp lại các nút trong #side-nav thành nhóm cha/con, điền
+   ô chọn Menu cha trong form Admin, và thêm cột Menu cha vào
+   bảng Admin. Vì render() gốc tạo lại innerHTML mỗi lần, nên
+   trạng thái mở/đóng được giữ trong biến oldMenuExpandedV24
+   ngoài render(), và được áp lại sau mỗi lần render.
+   ============================================================ */
+var oldMenuExpandedV24 = {};
+function oldParentIdV24(item) {
+  if (!item) return '';
+  return String(item.parentid || item.parentId || '');
+}
+function oldParentNameV24(parentId) {
+  if (!parentId) return '—';
+  const p = (typeof sidebar !== 'undefined') ? sidebar.find(s => String(s.id) === String(parentId)) : null;
+  return p ? p.name : '—';
+}
+function toggleOldMenuV24(id) {
+  oldMenuExpandedV24[id] = oldMenuExpandedV24[id] === false ? true : false;
+  if (typeof render === 'function') render();
+}
+function regroupOldMenuNavV24() {
+  try {
+    const nav = document.getElementById('side-nav');
+    if (!nav || typeof sidebar === 'undefined' || !sidebar.length) return;
+    const btns = Array.from(nav.children);
+    if (btns.length !== sidebar.length) return;
+    const byId = {};
+    sidebar.forEach(it => { byId[String(it.id)] = it; });
+    const parents = sidebar.filter(it => {
+      const pid = oldParentIdV24(it);
+      if (!pid) return true;
+      const p = byId[pid];
+      if (!p) return true;
+      if (oldParentIdV24(p)) return true;
+      return false;
+    });
+    const childrenMap = {};
+    sidebar.forEach(it => {
+      const pid = oldParentIdV24(it);
+      if (pid && byId[pid] && !oldParentIdV24(byId[pid])) {
+        if (!childrenMap[pid]) childrenMap[pid] = [];
+        childrenMap[pid].push(it);
+      }
+    });
+    const frag = document.createDocumentFragment();
+    const used = new Set();
+    parents.forEach(par => {
+      const idx = sidebar.indexOf(par);
+      const btn = btns[idx];
+      if (!btn) return;
+      used.add(String(par.id));
+      const subs = childrenMap[String(par.id)] || [];
+      if (!subs.length) { frag.appendChild(btn); return; }
+      const wrap = document.createElement('div');
+      wrap.className = 'mb-1';
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-1';
+      const open = oldMenuExpandedV24[String(par.id)] !== false;
+      const tog = document.createElement('button');
+      tog.className = 'w-6 h-6 shrink-0 text-slate-400 font-black';
+      tog.title = 'Mở/đóng submenu';
+      tog.textContent = open ? '▾' : '▸';
+      tog.setAttribute('onclick', "toggleOldMenuV24('" + String(par.id).replace(/'/g, "\\'") + "')");
+      btn.classList.add('flex-1');
+      row.appendChild(tog);
+      row.appendChild(btn);
+      wrap.appendChild(row);
+      const childBox = document.createElement('div');
+      childBox.style.display = open ? 'block' : 'none';
+      subs.forEach(sub => {
+        const cIdx = sidebar.indexOf(sub);
+        const cBtn = btns[cIdx];
+        if (!cBtn) return;
+        used.add(String(sub.id));
+        cBtn.style.paddingLeft = '2.25rem';
+        childBox.appendChild(cBtn);
+      });
+      wrap.appendChild(childBox);
+      frag.appendChild(wrap);
+    });
+    sidebar.forEach(it => {
+      if (!used.has(String(it.id))) {
+        const idx = sidebar.indexOf(it);
+        if (btns[idx]) frag.appendChild(btns[idx]);
+      }
+    });
+    nav.innerHTML = '';
+    nav.appendChild(frag);
+  } catch (e) {}
+}
+function populateOldParentSelectV24() {
+  try {
+    const sel = document.getElementById('ad-sparent');
+    if (!sel || typeof sidebar === 'undefined') return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">(Không có — menu gốc)</option>';
+    sidebar.forEach(it => {
+      if (oldParentIdV24(it)) return;
+      const opt = document.createElement('option');
+      opt.value = it.id;
+      opt.textContent = it.name;
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  } catch (e) {}
+}
+function postProcessOldAdminTableV24() {
+  try {
+    if (typeof sidebar === 'undefined') return;
+    const rows = document.querySelectorAll('#ad-sidebar-table tr');
+    rows.forEach((row, idx) => {
+      const item = sidebar[idx];
+      if (!item) return;
+      const cell = document.createElement('td');
+      cell.textContent = oldParentNameV24(oldParentIdV24(item));
+      row.appendChild(cell);
+      const editBtn = row.querySelector('button[onclick*="editSidebar"]');
+      if (editBtn) {
+        const oc = editBtn.getAttribute('onclick') || '';
+        if (oc.indexOf(oldParentIdV24(item)) === -1) {
+          const replaced = oc.replace(/\)\s*;?\s*$/, ", '" + oldParentIdV24(item).replace(/'/g, "\\'") + "')");
+          editBtn.setAttribute('onclick', replaced);
+        }
+      }
+    });
+  } catch (e) {}
+}
+function filterContentV24() {
+  try {
+    const query = (document.getElementById('search-input').value || '').toLowerCase().trim();
+    const nav = document.getElementById('side-nav');
+    if (nav) {
+      nav.querySelectorAll('.menu-btn-item').forEach(btn => {
+        const name = (btn.textContent || '').toLowerCase();
+        btn.style.display = name.indexOf(query) !== -1 ? 'flex' : 'none';
+      });
+      nav.querySelectorAll('.mb-1').forEach(wrap => {
+        const anyVisible = Array.from(wrap.querySelectorAll('.menu-btn-item')).some(b => b.style.display !== 'none');
+        wrap.style.display = anyVisible ? '' : 'none';
+        const childBox = wrap.querySelector('div > div:not(.flex)');
+        const tog = wrap.querySelector('button[onclick*="toggleOldMenuV24"]');
+        if (childBox && tog) {
+          if (query) { if (anyVisible) childBox.style.display = 'block'; }
+          else { childBox.style.display = (tog.textContent === '▾') ? 'block' : 'none'; }
+        }
+      });
+    }
+    const gridCards = document.querySelectorAll('#grid-links > div');
+    if (typeof sidebar !== 'undefined') {
+      sidebar.forEach((item, index) => {
+        const match = (item.name || '').toLowerCase().indexOf(query) !== -1;
+        if (gridCards[index]) gridCards[index].style.display = match ? 'block' : 'none';
+      });
+    }
+  } catch (e) {}
+}
+if (typeof filterContent === 'function') { filterContent = filterContentV24; }
+(function hookRenderV24() {
+  if (typeof render === 'function' && !render.__v24) {
+    const origRender = render;
+    const wrapped = function () { origRender(); regroupOldMenuNavV24(); populateOldParentSelectV24(); postProcessOldAdminTableV24(); };
+    wrapped.__v24 = true; render = wrapped;
+  }
+})();
+async function saveSidebar() {
+  const feeMode = document.getElementById('ad-sfee-mode').value;
+  const parentSel = document.getElementById('ad-sparent');
+  const item = {
+    id: document.getElementById('ad-sid').value || 'item-' + Date.now(),
+    name: document.getElementById('ad-sname').value.trim(),
+    url: document.getElementById('ad-surl').value.trim(),
+    image: document.getElementById('ad-simg').value.trim(),
+    feeMode: feeMode,
+    price: document.getElementById('ad-sprice').value.trim() === '' ? '' : Number(document.getElementById('ad-sprice').value),
+    parentId: parentSel ? parentSel.value : ''
+  };
+  document.getElementById('loading').style.display = 'flex';
+  await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveSidebarItem', item: item }) });
+  document.getElementById('ad-sid').value = '';
+  document.getElementById('ad-sname').value = '';
+  document.getElementById('ad-surl').value = '';
+  document.getElementById('ad-simg').value = '';
+  document.getElementById('ad-sfee-mode').value = 'default';
+  document.getElementById('ad-sprice').value = '';
+  if (parentSel) parentSel.value = '';
+  alert('Đã lưu cài đặt menu thành công!');
+  await sync();
+}
+function editSidebar(id, n, u, i, mode, price, parentId) {
+  document.getElementById('ad-sid').value = id;
+  document.getElementById('ad-sname').value = n;
+  document.getElementById('ad-surl').value = u;
+  document.getElementById('ad-simg').value = i;
+  document.getElementById('ad-sfee-mode').value = mode || 'default';
+  document.getElementById('ad-sprice').value = (price === undefined || price === null) ? '' : price;
+  const parentSel = document.getElementById('ad-sparent');
+  if (parentSel) {
+    if (!Array.from(parentSel.options).some(o => o.value === (parentId || ''))) {
+      const opt = document.createElement('option');
+      opt.value = parentId || '';
+      opt.textContent = oldParentNameV24(parentId || '');
+      parentSel.appendChild(opt);
+    }
+    parentSel.value = parentId || '';
+  }
+  showAdminTab('ad-sidebar');
+}
+async function deleteSidebar(id) {
+  const hasChildren = (typeof sidebar !== 'undefined') ? sidebar.some(s => oldParentIdV24(s) === String(id)) : false;
+  if (hasChildren) { alert('Không xoá được: menu này còn submenu. Hãy xoá hoặc chuyển các submenu của nó trước.'); return; }
+  if (confirm('Bạn có chắc chắn muốn xóa menu này?')) {
+    document.getElementById('loading').style.display = 'flex';
+    await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteSidebarItem', id: id }) });
+    await sync();
+  }
+}
+
+    </script>
+    <script>
+/* ============================================================
+   V25 — BẮT BUỘC ĐĂNG NHẬP MỚI ĐƯỢC CHỌN VÀ XEM NỘI DUNG
+   CÁC MENU BÊN TRÁI
+   Menu liên kết cũ vốn đã có luật này trong handleOpenLink gốc:
+   chưa đăng nhập thì chỉ báo "Bạn cần ĐĂNG NHẬP để XEM NỘI DUNG
+   này!" và mở hộp đăng nhập (modal-auth), không mở link, không
+   trừ lượt miễn phí, không mở hộp chọn gói.
+   Menu học tập trước v25 thì chưa có luật này: khách vẫn mở được
+   danh mục nhờ lượt miễn phí (FREE_LIMIT) hoặc nhờ danh mục ở
+   chế độ Miễn phí, và vẫn mở được bài/đề bên trong.
+   V25 áp đúng luật của menu cũ sang menu học tập, ở cổng vào:
+   - Bấm bất kỳ mục nào ở menu trái học tập (kể cả danh mục gốc
+     Tin học, vì đó cũng là 1 mục menu trái) mà chưa đăng nhập
+     thì chỉ báo đúng câu trên và mở hộp đăng nhập, không mở nội
+     dung, không dùng lượt miễn phí.
+   - Bấm bài học/đề thi mà chưa đăng nhập cũng bị chặn y hệt,
+     để không có đường vòng vào nội dung của menu trái.
+   - Đã đăng nhập thì mọi thứ giữ nguyên v22/v24: chế độ tính
+     phí, lượt miễn phí, gói tháng/1 năm, nhãn Free/Đã Mua/giá.
+   - Nút mở/đóng ▾/▸ của các nhóm menu không bị chặn, vì nó chỉ
+     hiện/ẩn tên các mục, không mở nội dung.
+   - Sau khi đăng nhập, trang tải lại (hàm doLogin gốc làm vậy),
+     giống menu cũ: người dùng bấm lại mục vừa chọn là mở được
+     ngay, không cần làm gì thêm.
+   - Ghi chú 🔒 ở đầu sidebar (phần HTML thêm trong v25) chỉ
+     hiện khi chưa đăng nhập, và tự ẩn sau khi đăng nhập.
+   Cách làm: bọc showCategoryView, openLesson, showQuizIntro và
+   tryOpenLearnCategory (đã được v22 bọc 1 lần) thêm 1 lớp kiểm
+   tra đăng nhập ở ngoài cùng, dùng đúng câu báo và đúng hộp
+   đăng nhập của menu cũ. Không sửa hàm handleOpenLink gốc, vì
+   nó đã bắt đăng nhập rồi.
+   ============================================================ */
+function requireLoginV25() {
+  if (typeof currentUser !== 'undefined' && currentUser) return true;
+  alert('Bạn cần ĐĂNG NHẬP để XEM NỘI DUNG này!');
+  const auth = document.getElementById('modal-auth');
+  if (auth) auth.classList.add('active');
+  return false;
+}
+function updateLoginNoteV25() {
+  try {
+    const el = document.getElementById('login-required-note');
+    if (!el) return;
+    el.style.display = (typeof currentUser !== 'undefined' && currentUser) ? 'none' : 'block';
+  } catch (e) {}
+}
+(function wrapLearnGateV25() {
+  if (typeof showCategoryView === 'function' && !showCategoryView.__v25) {
+    const orig = showCategoryView;
+    const wrapped = function (id) { if (!requireLoginV25()) return; orig(id); };
+    wrapped.__v25 = true; showCategoryView = wrapped;
+  }
+  if (typeof openLesson === 'function' && !openLesson.__v25) {
+    const orig = openLesson;
+    const wrapped = function (id) { if (!requireLoginV25()) return; orig(id); };
+    wrapped.__v25 = true; openLesson = wrapped;
+  }
+  if (typeof showQuizIntro === 'function' && !showQuizIntro.__v25) {
+    const orig = showQuizIntro;
+    const wrapped = function (id) { if (!requireLoginV25()) return; orig(id); };
+    wrapped.__v25 = true; showQuizIntro = wrapped;
+  }
+  if (typeof tryOpenLearnCategory === 'function' && !tryOpenLearnCategory.__v25) {
+    const orig = tryOpenLearnCategory;
+    const wrapped = function (catId, pendingPostId, pendingPostType) { if (!requireLoginV25()) return; orig(catId, pendingPostId, pendingPostType); };
+    wrapped.__v25 = true; tryOpenLearnCategory = wrapped;
+  }
+  if (typeof render === 'function' && !render.__v25) {
+    const orig = render;
+    const wrapped = function () { orig(); updateLoginNoteV25(); };
+    wrapped.__v25 = true; render = wrapped;
+  }
+  if (typeof renderCatNav === 'function' && !renderCatNav.__v25) {
+    const orig = renderCatNav;
+    const wrapped = function () { orig(); updateLoginNoteV25(); };
+    wrapped.__v25 = true; renderCatNav = wrapped;
+  }
+  updateLoginNoteV25();
+})();
 
     </script>
 </body>
