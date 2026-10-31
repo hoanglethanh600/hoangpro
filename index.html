@@ -5909,5 +5909,265 @@ function updateLoginNoteV25() {
 })();
 
     </script>
+    <script>
+/* ============================================================
+   V27 — GÓI ĐÃ THANH TOÁN: HIỂN THỊ SỐ NGÀY CÒN LẠI + TỰ ĐỘNG
+   GIA HẠN KHI CHƯA HỦY GÓI
+   Trước v27, menu đã mua chỉ hiện nhãn chung chung: gói 1 năm
+   hiện "Đã Mua", gói tháng hiện "Còn hạn 1T", không biết còn
+   bao nhiêu ngày, và hết hạn thì phải tự bấm mua lại.
+   V27 làm 2 việc, cho cả menu liên kết cũ và menu học tập
+   (submenu Tin học 6/7/8/9, vì v22 đã dùng chung cơ chế gói
+   tháng/năm với menu cũ, theo id danh mục):
+   1. Hiển thị số ngày còn lại: nhãn của mục đã mua đổi thành
+      "Còn X ngày" (X = làm tròn lên, từ ngày hết hạn trừ hôm
+      nay). Gói 1 năm mua từ lâu nhưng chưa có ngày hết hạn
+      (kiểu mua "vĩnh viễn" cũ, purchased_ có mà yearly_expiry_
+      không có) thì vẫn giữ nhãn "Đã Mua", vì không tính được
+      số ngày. Mục miễn phí, tài khoản Vô hạn, mục chưa mua
+      thì nhãn giữ nguyên như cũ.
+   2. Tự động gia hạn: mặc định BẬT cho mọi gói tháng/1 năm.
+      Khi trang render mà thấy 1 gói đã hết hạn, không còn
+      quyền nào khác còn hạn, chưa bị hủy tự gia hạn, và số Xu
+      đủ trả gói đó, hệ thống tự trừ Xu (ghi về Sheet qua
+      updateUserCoins như khi mua tay), và cộng thêm 30 ngày
+      (gói tháng) hoặc 365 ngày (gói 1 năm) tính từ lúc gia hạn,
+      rồi báo 1 lần bằng alert liệt kê các gói vừa gia hạn.
+      Nếu Xu không đủ thì KHÔNG trừ, KHÔNG gia hạn, gói cứ
+      hết hạn như cũ và người dùng bấm vào mục đó sẽ gặp hộp
+      chọn gói như cũ (ở đó nếu thiếu Xu sẽ mở hộp nạp Xu).
+      Gia hạn chỉ chạy khi người dùng vào trang (render), vì
+      toàn bộ quyền và Xu hiện tại đều lưu ở trình duyệt, không
+      có máy chủ chạy ngầm để trừ tiền lúc nửa đêm.
+   Hủy / bật lại tự gia hạn: bên cạnh nhãn "Còn X ngày" ở menu
+   trái có 1 nút nhỏ: ✕ khi đang bật tự gia hạn, ↻ khi đã hủy.
+   Bấm ✕ (có hỏi xác nhận) thì gói hiện tại vẫn dùng đến hết
+   hạn, sau đó không tự trừ Xu nữa. Bấm ↻ thì bật lại ngay.
+   Mua lại 1 gói sau khi hủy (hoặc mua gói mới) sẽ tự bật lại
+   tự gia hạn cho gói đó, vì hàm setMonthlyExpiry /
+   setYearlyExpiry được bọc để ghi nhớ gói vừa mua và đặt
+   auto_renew = '1'.
+   Gói nào được gia hạn khi cả tháng và năm đều hết hạn: gói
+   mua gần nhất (ghi trong lastpkg_) được ưu tiên; gói cũ chưa
+   có lastpkg_ thì ưu tiên gói 1 năm, rồi đến gói tháng. Nếu
+   đang còn quyền ở 1 gói khác thì không gia hạn gói đã hết,
+   tránh trừ tiền 2 lần cho cùng 1 mục.
+   ============================================================ */
+function daysLeftV27(expiry) {
+  if (!expiry) return null;
+  const ms = Number(expiry) - Date.now();
+  if (ms <= 0) return 0;
+  return Math.ceil(ms / 86400000);
+}
+function autoRenewKeyV27(menuKey) {
+  const u = (typeof currentUser !== 'undefined' && currentUser && currentUser.username) ? currentUser.username : '';
+  return 'auto_renew_' + u + '_' + menuKey;
+}
+function lastPkgKeyV27(menuKey) {
+  const u = (typeof currentUser !== 'undefined' && currentUser && currentUser.username) ? currentUser.username : '';
+  return 'lastpkg_' + u + '_' + menuKey;
+}
+function isAutoRenewOnV27(menuKey) {
+  try { return localStorage.getItem(autoRenewKeyV27(menuKey)) !== '0'; } catch (e) { return true; }
+}
+function paidInfoV27(menuKey) {
+  try {
+    const yearlyExp = getYearlyExpiry(menuKey);
+    if (isYearlyAccessValid(menuKey)) {
+      if (!yearlyExp) return { kind: 'one_time', expiry: 0, days: null };
+      return { kind: 'one_time', expiry: yearlyExp, days: daysLeftV27(yearlyExp) };
+    }
+    const monthlyExp = getMonthlyExpiry(menuKey);
+    if (monthlyExp > Date.now()) return { kind: 'monthly', expiry: monthlyExp, days: daysLeftV27(monthlyExp) };
+  } catch (e) {}
+  return null;
+}
+function checkAutoRenewV27() {
+  try {
+    if (typeof currentUser === 'undefined' || !currentUser) return [];
+    if (typeof isUnlimitedUser === 'function' && isUnlimitedUser(currentUser)) return [];
+    const candidates = [];
+    const seen = {};
+    if (typeof sidebar !== 'undefined' && Array.isArray(sidebar)) {
+      sidebar.forEach(it => {
+        const key = it.id || it.name;
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        candidates.push({ key: key, name: it.name || key, item: it });
+      });
+    }
+    if (typeof categories !== 'undefined' && Array.isArray(categories) && typeof learnCatItem === 'function') {
+      categories.forEach(cat => {
+        if (!cat.parentId) return;
+        const key = cat.id;
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        candidates.push({ key: key, name: cat.name || key, item: learnCatItem(cat) });
+      });
+    }
+    const renewed = [];
+    candidates.forEach(c => {
+      let monthlyExp = 0, yearlyExp = 0;
+      try { monthlyExp = getMonthlyExpiry(c.key); } catch (e) {}
+      try { yearlyExp = getYearlyExpiry(c.key); } catch (e) {}
+      const monthlyValid = monthlyExp > Date.now();
+      let yearlyValid = false;
+      try { yearlyValid = isYearlyAccessValid(c.key); } catch (e) {}
+      if (monthlyValid || yearlyValid) return;
+      let pkg = null;
+      let last = null;
+      try { last = localStorage.getItem(lastPkgKeyV27(c.key)); } catch (e) {}
+      if (last === 'monthly' && monthlyExp > 0) pkg = 'monthly';
+      else if (last === 'one_time' && yearlyExp > 0) pkg = 'one_time';
+      else if (yearlyExp > 0) pkg = 'one_time';
+      else if (monthlyExp > 0) pkg = 'monthly';
+      else return;
+      if (!isAutoRenewOnV27(c.key)) return;
+      let price = 0;
+      try { price = getPayOptionPrice(c.item, pkg); } catch (e) { return; }
+      if (price === null || price === undefined) return;
+      price = Number(price);
+      if (price > 0 && Number(currentUser.coins || 0) < price) return;
+      if (price > 0) {
+        currentUser.coins = Number(currentUser.coins || 0) - price;
+        try { sessionStorage.setItem('user', JSON.stringify(currentUser)); } catch (e) {}
+        try { fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'updateUserCoins', username: currentUser.username, coins: currentUser.coins }) }).catch(function () {}); } catch (e) {}
+      }
+      try {
+        if (pkg === 'monthly') setMonthlyExpiry(c.key);
+        else setYearlyExpiry(c.key);
+      } catch (e) {}
+      renewed.push({ name: c.name, pkg: pkg, price: price, days: pkg === 'monthly' ? 30 : 365 });
+    });
+    if (renewed.length) {
+      alert('Đã tự động gia hạn:\n' + renewed.map(function (r) {
+        return '- ' + r.name + ' (' + (r.pkg === 'monthly' ? 'Gói 1 tháng' : 'Mua 1 năm') + '): trừ ' + Number(r.price).toLocaleString() + ' Xu, còn ' + r.days + ' ngày.';
+      }).join('\n'));
+    }
+    return renewed;
+  } catch (e) { return []; }
+}
+function toggleAutoRenewV27(menuKey, menuName) {
+  if (typeof currentUser === 'undefined' || !currentUser) return;
+  if (isAutoRenewOnV27(menuKey)) {
+    if (!confirm('Hủy tự động gia hạn cho "' + menuName + '"?\nGói hiện tại vẫn dùng đến hết hạn, sau đó sẽ không tự trừ Xu nữa. Bạn có thể mua lại bất cứ lúc nào.')) return;
+    try { localStorage.setItem(autoRenewKeyV27(menuKey), '0'); } catch (e) {}
+    alert('Đã hủy tự động gia hạn cho "' + menuName + '".');
+  } else {
+    try { localStorage.setItem(autoRenewKeyV27(menuKey), '1'); } catch (e) {}
+    alert('Đã bật lại tự động gia hạn cho "' + menuName + '".');
+  }
+  try { render(); } catch (e) {}
+  try { renderCatNav(); } catch (e) {}
+}
+function renewToggleBtnV27(menuKey, menuName) {
+  const on = isAutoRenewOnV27(menuKey);
+  const btn = document.createElement('button');
+  btn.textContent = on ? '✕' : '↻';
+  btn.title = on ? 'Hủy tự động gia hạn – gói hiện tại vẫn dùng đến hết hạn' : 'Bật lại tự động gia hạn';
+  btn.style.fontSize = '9px';
+  btn.style.fontWeight = '800';
+  btn.style.padding = '1px 5px';
+  btn.style.borderRadius = '9999px';
+  btn.style.border = '1px solid #e2e8f0';
+  btn.style.background = '#fff';
+  btn.style.color = on ? '#dc2626' : '#059669';
+  btn.style.cursor = 'pointer';
+  btn.style.flexShrink = '0';
+  btn.addEventListener('click', function (ev) { ev.stopPropagation(); toggleAutoRenewV27(menuKey, menuName); });
+  return btn;
+}
+function updateOldMenuBadgesV27() {
+  try {
+    const nav = document.getElementById('side-nav');
+    if (!nav || typeof sidebar === 'undefined') return;
+    nav.querySelectorAll('.menu-btn-item').forEach(function (btn) {
+      const oc = btn.getAttribute('onclick') || '';
+      if (oc.indexOf('handleOpenLink') === -1) return;
+      const parts = [];
+      const re = /'((?:\\'|[^'])*)'/g;
+      let m;
+      while ((m = re.exec(oc)) !== null) parts.push(m[1].replace(/\\'/g, "'"));
+      const menuId = parts[2] || '';
+      const menuName = parts[1] || '';
+      const item = sidebar.find(function (s) { return String(s.id) === String(menuId); }) || sidebar.find(function (s) { return s.name === menuName; });
+      if (!item) return;
+      const key = item.id || item.name;
+      const paid = paidInfoV27(key);
+      if (!paid || paid.days === null) return;
+      const badgeWrap = btn.querySelector('span.ml-auto');
+      const badge = badgeWrap ? badgeWrap.querySelector('span') : null;
+      if (badge) badge.textContent = 'Còn ' + paid.days + ' ngày';
+      btn.title = 'Còn ' + paid.days + ' ngày • Tự động gia hạn: ' + (isAutoRenewOnV27(key) ? 'Bật' : 'Tắt');
+      btn.appendChild(renewToggleBtnV27(key, item.name));
+    });
+  } catch (e) {}
+}
+function updateLearnBadgesV27() {
+  try {
+    const nav = document.getElementById('cat-nav');
+    if (!nav || typeof categories === 'undefined') return;
+    nav.querySelectorAll('button').forEach(function (btn) {
+      const oc = btn.getAttribute('onclick') || '';
+      const mm = oc.match(/showCategoryView\('([^']+)'\)/);
+      if (!mm) return;
+      const cat = getCat(mm[1]);
+      if (!cat || !cat.parentId) return;
+      const paid = paidInfoV27(cat.id);
+      if (!paid || paid.days === null) return;
+      const spans = btn.querySelectorAll('span');
+      let badge = null;
+      spans.forEach(function (s) {
+        const t = s.textContent || '';
+        if (t === 'Đã Mua' || t === 'Free' || /xu$/.test(t) || /\/T$/.test(t)) badge = s;
+      });
+      if (badge) badge.textContent = 'Còn ' + paid.days + ' ngày';
+      btn.title = 'Còn ' + paid.days + ' ngày • Tự động gia hạn: ' + (isAutoRenewOnV27(cat.id) ? 'Bật' : 'Tắt');
+      btn.appendChild(renewToggleBtnV27(cat.id, cat.name));
+    });
+  } catch (e) {}
+}
+(function hookExpiryV27() {
+  if (typeof setMonthlyExpiry === 'function' && !setMonthlyExpiry.__v27) {
+    const orig = setMonthlyExpiry;
+    const wrapped = function (name) {
+      orig(name);
+      try {
+        if (currentUser) {
+          localStorage.setItem(lastPkgKeyV27(name), 'monthly');
+          localStorage.setItem(autoRenewKeyV27(name), '1');
+        }
+      } catch (e) {}
+    };
+    wrapped.__v27 = true; setMonthlyExpiry = wrapped;
+  }
+  if (typeof setYearlyExpiry === 'function' && !setYearlyExpiry.__v27) {
+    const orig = setYearlyExpiry;
+    const wrapped = function (name) {
+      orig(name);
+      try {
+        if (currentUser) {
+          localStorage.setItem(lastPkgKeyV27(name), 'one_time');
+          localStorage.setItem(autoRenewKeyV27(name), '1');
+        }
+      } catch (e) {}
+    };
+    wrapped.__v27 = true; setYearlyExpiry = wrapped;
+  }
+})();
+(function hookRenderV27() {
+  if (typeof render === 'function' && !render.__v27) {
+    const orig = render;
+    const wrapped = function () { checkAutoRenewV27(); orig(); updateOldMenuBadgesV27(); };
+    wrapped.__v27 = true; render = wrapped;
+  }
+  if (typeof renderCatNav === 'function' && !renderCatNav.__v27) {
+    const orig = renderCatNav;
+    const wrapped = function () { checkAutoRenewV27(); orig(); updateLearnBadgesV27(); };
+    wrapped.__v27 = true; renderCatNav = wrapped;
+  }
+})();
+
+    </script>
 </body>
 </html>
