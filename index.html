@@ -1273,7 +1273,7 @@
             }
         });
 
-        const gasApiUrl = "https://script.google.com/macros/s/AKfycbz5KfArdSeBrSjTA_-jromocTYq87Nhd2rw6h6hMZ7mLJPLHNt4ga3b96NB_EWmb3sUQg/exec";
+        const gasApiUrl = "https://script.google.com/macros/s/AKfycbyPRLygLDicEqVJb7zFwgjlDteeElo-eWJzm47mDcltpSCauz7JkiAqXZ0W16kd4N55Wg/exec";
         const BANK_NUMBER = "99ZP24066M14043910", ACCOUNT_NAME = "ZALOPAY_LE_THANH_HOANG", BANK_ID = "vietcapitalbank";
         
         let users = [], sidebar = [], deposits = [], currentUser = JSON.parse(sessionStorage.getItem('user'));
@@ -5133,6 +5133,127 @@ async function aiGenerateQuiz() {
     quizSetStatus('ad-quiz-ai-status', 'AI lỗi: ' + (e.message || e) + (totalAdded ? ' Đã giữ ' + totalAdded + ' câu trước đó, bấm lại để tạo tiếp phần còn lại.' : ' Kiểm tra key Gemini rồi bấm lại.'), false);
   }
 }
+
+    </script>
+    <script>
+/* ============================================================
+   V19 — DỮ LIỆU CHƯA ĐỒNG BỘ VỚI GOOGLE SHEET
+   Nguyên nhân đã xác minh (31/10, kiểm tra trực tiếp URL GAS):
+   - App Script đang chạy ở URL cũ trả về {"success":false,
+     "error":"Invalid Action"} cho ?action=getPosts, tức là bản
+     GAS đang chạy vẫn là bản cũ trước v4, chưa có getCategories/
+     getPosts/savePost mới. Trang gọi getPosts thất bại nên tự
+     rơi về dữ liệu mẫu trong trình duyệt (SEED_POSTS: Tin học 6
+     17 bài + Tin 7/8/9 mỗi cái 3 bài + 1 đề = 27 bài/đề). Ảnh bạn
+     gửi đúng là 3 bài mẫu của Tin học 9: "Lập trình nâng cao
+     và dự án", "Trí tuệ nhân tạo quanh ta", "Nghề nghiệp với
+     tin học" — không phải dữ liệu thật trong Sheet.
+   - Lưu bài dùng fetch mode no-cors nên không đọc được lỗi từ
+     GAS: GAS cũ trả "Invalid Post Action" nhưng trang vẫn tưởng
+     lưu xong, chỉ lưu tạm vào bộ nhớ trình duyệt (localAddedPosts),
+     tải lại trang là mất. Đó là cảm giác "lưu rồi mà không đồng bộ".
+   Sửa trong v19 (không phá cách lưu cũ, vì POST qua Apps Script
+   vẫn cần no-cors để tránh lỗi CORS do chuyển hướng):
+   1. syncNew: ghi lại lỗi GAS (Invalid Action / lỗi mạng) vào
+      window.__gasSyncError, và hiện cảnh báo đỏ ngay trên bảng
+      bài đăng (tab Đăng bài & Đề thi), không chỉ ở tab Danh mục
+      như trước, để admin thấy ngay khi đang xem bảng.
+   2. savePost: sau khi lưu, đợi 2 giây rồi tự gọi lại getPosts
+      để kiểm tra bài vừa lưu có trong Sheet thật không. Nếu GAS
+      trả Invalid Action hoặc không thấy bài, hiện cảnh báo rõ
+      ràng và yêu cầu deploy App Script v19, thay vì im lặng.
+      Nếu thấy bài trong Sheet thì không làm phiền admin.
+   Cách sửa triệt để vẫn là deploy App Script v19: dán đè
+   19.APP_SCRIPT.js, Deploy > New version (giữ URL cũ, quyền
+   truy cập Anyone), tải lại trang. Khi đó getPosts trả dữ liệu
+   thật, cảnh báo tự biến mất, và dữ liệu mẫu cũng biến mất.
+   ============================================================ */
+function updateGasSyncWarning() {
+  try {
+    const ptbl = document.getElementById('ad-posts-table');
+    if (ptbl && ptbl.parentNode && ptbl.parentNode.parentNode) {
+      let warn = document.getElementById('gas-sync-warning');
+      const bad = !!(window.__gasSyncError || (typeof usingSeed !== 'undefined' && usingSeed));
+      if (bad) {
+        if (!warn) {
+          warn = document.createElement('div');
+          warn.id = 'gas-sync-warning';
+          ptbl.parentNode.parentNode.insertBefore(warn, ptbl.parentNode);
+        }
+        warn.className = 'bg-red-50 border border-red-300 text-red-800 rounded-2xl p-4 mb-4 text-sm leading-relaxed font-bold';
+        warn.innerHTML = '⚠️ DỮ LIỆU CHƯA ĐỒNG BỘ VỚI GOOGLE SHEET: Trang đang hiển thị dữ liệu mẫu trong trình duyệt, không phải dữ liệu thật trong Sheet.'
+          + (window.__gasSyncError ? ' App Script trả về: "' + window.__gasSyncError + '".' : '')
+          + ' Nguyên nhân thường gặp: App Script đang chạy ở URL cũ vẫn là bản cũ, chưa có getPosts/savePost mới. Cách sửa: dán đè file 19.APP_SCRIPT.js vào Apps Script, Deploy &gt; New version (giữ URL cũ, quyền truy cập Anyone), tải lại trang. Bài lưu trong lúc chưa đồng bộ chỉ lưu tạm trên trình duyệt này và sẽ mất khi tải lại trang.';
+      } else if (warn) {
+        warn.remove();
+      }
+    }
+    const seedNote = document.getElementById('seed-note');
+    if (seedNote && window.__gasSyncError) {
+      seedNote.innerText = '⚠️ DỮ LIỆU CHƯA ĐỒNG BỘ VỚI GOOGLE SHEET: App Script trả về "' + window.__gasSyncError + '". Hãy deploy App Script v19 (New version, giữ URL cũ) rồi tải lại trang. Đang hiển thị dữ liệu mẫu trong trình duyệt.';
+    }
+  } catch (e) {}
+}
+async function syncNew() {
+  window.__gasSyncError = null;
+  try {
+    const [rC, rP] = await Promise.all([
+      fetch(gasApiUrl + '?action=getCategories').then(r => r.json()).catch(() => ({})),
+      fetch(gasApiUrl + '?action=getPosts').then(r => r.json()).catch(() => ({})),
+    ]);
+    if (rC && rC.success === false) window.__gasSyncError = rC.error || 'Invalid Action';
+    if (rP && rP.success === false) window.__gasSyncError = rP.error || 'Invalid Action';
+    const gotC = Array.isArray(rC.data) && rC.data.length ? normCats(rC.data) : null;
+    const gotP = Array.isArray(rP.data) && rP.data.length ? normPosts(rP.data) : null;
+    if (gotC) { categories = gotC; localAddedCats.forEach(c => { if (!getCat(c.id)) categories.push(c); }); usingSeed = false; }
+    else if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; }
+    if (gotP) { posts = gotP; localAddedPosts.forEach(p => { if (!getPost(p.id)) posts.push(p); }); }
+    else if (!posts.length) { posts = SEED_POSTS.slice(); usingSeed = true; }
+  } catch (e) {
+    if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; }
+    if (!posts.length) { posts = SEED_POSTS.slice(); usingSeed = true; }
+  }
+  renderCatNav(); renderCatAdmin();
+  if (currentCatId) { const c = getCat(currentCatId); if (c) showCategoryView(currentCatId); }
+  updateGasSyncWarning();
+}
+(function hookRenderCatAdminV19() {
+  if (typeof renderCatAdmin === 'function' && !renderCatAdmin.__v19) {
+    const orig = renderCatAdmin;
+    const wrapped = function () { orig(); updateGasSyncWarning(); };
+    wrapped.__v19 = true; renderCatAdmin = wrapped;
+  }
+})();
+(function hookSavePostV19() {
+  if (typeof savePost === 'function' && !savePost.__v19) {
+    const origSave = savePost;
+    const wrapped = async function () {
+      const titleEl = document.getElementById('ad-post-title');
+      const catEl = document.getElementById('ad-post-cat');
+      const titleBefore = titleEl ? titleEl.value.trim() : '';
+      const catBefore = catEl ? catEl.value : '';
+      await origSave();
+      try {
+        const titleAfter = document.getElementById('ad-post-title') ? document.getElementById('ad-post-title').value.trim() : '';
+        if (!titleBefore || titleAfter) return;
+        await new Promise(r => setTimeout(r, 2000));
+        const rP = await fetch(gasApiUrl + '?action=getPosts').then(r => r.json()).catch(() => ({}));
+        if (rP && rP.success === false) {
+          window.__gasSyncError = rP.error || 'Invalid Action';
+          updateGasSyncWarning();
+          alert('⚠️ Bài "' + titleBefore + '" CHƯA đồng bộ lên Google Sheet.\nApp Script trả về: "' + window.__gasSyncError + '".\n\nTức là App Script đang chạy vẫn là bản cũ, chưa có savePost/getPosts mới. Bài hiện chỉ lưu tạm trên trình duyệt này, tải lại trang sẽ mất.\n\nCách sửa: dán đè file 19.APP_SCRIPT.js vào Apps Script, Deploy > New version (giữ URL cũ, quyền truy cập Anyone), tải lại trang, rồi lưu lại bài này.');
+          return;
+        }
+        const data = Array.isArray(rP.data) ? rP.data : [];
+        const found = data.some(p => String(p.title || '').trim() === titleBefore && String(p.categoryid || p.categoryId || '') === String(catBefore));
+        if (!found) {
+          alert('⚠️ Bài "' + titleBefore + '" chưa thấy trong Google Sheet sau khi kiểm tra lại.\nCó thể App Script chưa lưu được (bản cũ) hoặc Sheet chưa kịp cập nhật.\n\nHãy tải lại trang và kiểm tra lại bảng bài đăng. Nếu bài mất, hãy deploy App Script v19 (New version, giữ URL cũ) rồi lưu lại bài này. Bài hiện chỉ lưu tạm trên trình duyệt này.');
+        }
+      } catch (e) {}
+    };
+    wrapped.__v19 = true; savePost = wrapped;
+  }
+})();
 
     </script>
 </body>
