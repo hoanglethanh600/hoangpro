@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tin học 6 — Bài 13: Thực hành: Tìm kiếm và thay thế | Kết nối tri thức với cuộc sống</title>
+<style>
+:root{--bg:#0f1226;--bg2:#171a38;--card:#1e2147;--card2:#262a55;--ink:#f4f5ff;--muted:#b9bce0;--acc:#ffb020;--acc2:#2dd4bf;--acc3:#818cf8;--pink:#fb7185;--ok:#34d399;--bad:#f87171;--radius:18px;--shadow:0 12px 32px rgba(0,0,0,.35)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#12142e 40%,#0c0e22);color:var(--ink);line-height:1.6}
+a{color:var(--acc2)}
+button{font-family:inherit;cursor:pointer}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(15,18,38,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.09)}
+.topbar-in{max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:900;letter-spacing:.2px}.logo span{color:var(--acc)}
+.pbar{flex:1;min-width:160px;height:10px;background:#2a2e5c;border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .4s}
+.pct{font-size:13px;color:var(--muted);min-width:110px}
+.btn{border:0;border-radius:12px;padding:9px 14px;font-weight:700;background:var(--card2);color:var(--ink);border:1px solid rgba(255,255,255,.12)}
+.btn:hover{filter:brightness(1.15)} .btn.primary{background:var(--acc);color:#231a00;border-color:transparent}
+.btn.teal{background:var(--acc2);color:#04201c;border-color:transparent}.btn.ghost{background:transparent}
+.btn.small{padding:6px 10px;font-size:13px;border-radius:10px}
+.layout{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:250px 1fr;gap:18px;padding:18px 16px 60px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.side{position:static!important}}
+.side{position:sticky;top:76px;align-self:start;background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:12px}
+.side h3{margin:6px 8px 10px;font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.navbtn{display:flex;gap:9px;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--ink);padding:10px;border-radius:12px;font-size:14.5px}
+.navbtn:hover{background:var(--card)} .navbtn.on{background:linear-gradient(90deg,rgba(255,176,32,.22),rgba(45,212,191,.14));border:1px solid rgba(255,176,32,.35)}
+.navbtn .dot{width:22px;height:22px;border-radius:50%;background:#2c3064;display:grid;place-items:center;font-size:12px;flex:none}
+.navbtn.done .dot{background:var(--ok);color:#052e22}
+.hero{background:radial-gradient(900px 400px at 15% 0%,rgba(129,140,248,.35),transparent),radial-gradient(700px 350px at 90% 10%,rgba(45,212,191,.25),transparent),linear-gradient(135deg,#23265a,#171a38);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:28px;box-shadow:var(--shadow)}
+.badge{display:inline-block;background:rgba(255,176,32,.16);color:var(--acc);border:1px solid rgba(255,176,32,.4);padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:800;letter-spacing:.04em}
+.hero h1{font-size:clamp(28px,4.6vw,46px);line-height:1.12;margin:12px 0 8px}
+.hero h1 em{color:var(--acc);font-style:normal}.hero p{color:var(--muted);max-width:760px;margin:6px 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:6px 11px;border-radius:99px;font-size:13px}
+section.panel{display:none;background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:26px;box-shadow:var(--shadow);margin-bottom:18px}
+section.panel.on{display:block;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+section.panel h2{margin:0 0 6px;font-size:clamp(22px,3vw,30px)} section.panel h3{margin:22px 0 8px}
+.sub{color:var(--muted);margin-top:0}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);padding:16px}
+.card h4{margin:0 0 6px}.card p{margin:4px 0;color:var(--muted);font-size:14.5px}
+.kbox{background:linear-gradient(135deg,rgba(255,176,32,.16),rgba(255,176,32,.05));border:1px solid rgba(255,176,32,.45);border-radius:var(--radius);padding:16px 18px}
+.kbox b{color:var(--acc)}
+.act{background:rgba(45,212,191,.09);border:1px dashed rgba(45,212,191,.5);border-radius:var(--radius);padding:16px}
+.act .tag{font-size:12px;font-weight:900;letter-spacing:.1em;color:var(--acc2);text-transform:uppercase}
+.chat{display:grid;gap:10px}.msg{max-width:88%;padding:11px 14px;border-radius:16px;font-size:15px}
+.msg.a{background:var(--card2);border-bottom-left-radius:4px}.msg.b{background:rgba(129,140,248,.25);margin-left:auto;border-bottom-right-radius:4px}
+.msg b{color:var(--acc)}
+/* TV sim */
+.tvwrap{display:grid;grid-template-columns:1.5fr .9fr;gap:16px}@media(max-width:820px){.tvwrap{grid-template-columns:1fr}}
+.tv{background:#05060f;border:10px solid #2b2e4f;border-radius:18px;aspect-ratio:16/9;position:relative;overflow:hidden;display:grid;place-items:center;text-align:center}
+.tv .scr{padding:16px;transition:filter .2s}
+.tv .chname{font-size:clamp(20px,3.4vw,34px);font-weight:900}.tv .chdesc{color:#cdd2ff;font-size:14px}
+.tv .osd{position:absolute;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+.osd .bar{width:110px;height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+.osd .bar i{display:block;height:100%;background:var(--acc)}
+.tv.off .scr{opacity:.08}.tv .offtxt{position:absolute;inset:0;display:none;place-items:center;color:#8b90c4}.tv.off .offtxt{display:grid}
+.remote{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:16px;display:grid;gap:9px;align-content:start}
+.remote h4{margin:0;text-align:center}
+.rrow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.rbtn{padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#2b2f63;color:#fff;font-weight:800}
+.rbtn:active{transform:scale(.97)} .rbtn.power{background:#7f1d2d}
+.log{background:#0b0d20;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px;font-size:13.5px;min-height:92px}
+.log div{margin:3px 0}.log .in{color:var(--acc3)}.log .pr{color:var(--acc)}.log .out{color:var(--acc2)}
+/* flip cards */
+.flip{perspective:900px;min-height:190px;cursor:pointer}
+.flip-in{position:relative;width:100%;height:100%;min-height:190px;transition:transform .55s;transform-style:preserve-3d}
+.flip.flipped .flip-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);padding:18px;display:grid;align-content:center;text-align:center;border:1px solid rgba(255,255,255,.12)}
+.face.f{background:linear-gradient(150deg,#2c3070,#1e2147)} .face.b{background:linear-gradient(150deg,#0f766e,#134e4a);transform:rotateY(180deg);text-align:left;font-size:14.5px}
+.face .big{font-size:38px}.face small{color:var(--muted)}
+/* match game */
+.pick{border:2px solid rgba(255,255,255,.14);background:var(--card);border-radius:14px;padding:13px;text-align:left;color:var(--ink);width:100%;font-size:15px}
+.pick.sel{border-color:var(--acc);background:rgba(255,176,32,.12)} .pick.ok{border-color:var(--ok);opacity:.65;pointer-events:none}
+.pick.wrong{border-color:var(--bad);animation:shake .3s}@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.scorebox{font-weight:900;font-size:17px}.scorebox span{color:var(--acc)}
+/* tabs */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tab{padding:9px 13px;border-radius:99px;border:1px solid rgba(255,255,255,.15);background:var(--card);color:var(--ink);font-weight:700}
+.tab.on{background:var(--acc3);color:#0d1030;border-color:transparent}
+.tabpane{display:none}.tabpane.on{display:block}
+/* sort game */
+.sortcard{background:var(--card);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:18px;text-align:center;font-size:17px;min-height:96px;display:grid;place-items:center}
+.binrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.bin{padding:16px;border-radius:14px;font-weight:900;font-size:16px;border:0;color:#08130d}
+.bin.pos{background:var(--ok)} .bin.neg{background:var(--pink);color:#2b060d}
+/* quiz */
+.q{background:var(--card);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);padding:16px;margin:12px 0}
+.q h4{margin:0 0 10px}.opt{display:block;width:100%;text-align:left;margin:7px 0;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#262a55;color:var(--ink);font-size:15px}
+.opt:hover{filter:brightness(1.15)} .opt.right{border-color:var(--ok);background:rgba(52,211,153,.18)} .opt.wrong{border-color:var(--bad);background:rgba(248,113,113,.15)}
+.expl{display:none;margin-top:9px;font-size:14px;color:var(--muted);background:rgba(255,255,255,.05);padding:10px 12px;border-radius:10px}.expl.show{display:block}
+input[type=text]{width:100%;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#12142e;color:#fff;font-size:15px}
+textarea{width:100%;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#12142e;color:#fff;font-size:15px;min-height:84px;font-family:inherit}
+.switchrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mind{display:grid;place-items:center;gap:12px;text-align:center}
+.mind .center{background:var(--acc);color:#231a00;font-weight:900;border-radius:16px;padding:14px 20px;font-size:18px}
+details{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 15px;margin:8px 0}
+summary{cursor:pointer;font-weight:800}
+.footnav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:#11142f;border:1px solid rgba(255,176,32,.5);color:#fff;padding:12px 18px;border-radius:14px;z-index:99;transition:transform .3s;box-shadow:var(--shadow);max-width:92vw;text-align:center}
+.toast.show{transform:translateX(-50%)}
+.watch{width:210px;height:250px;margin:0 auto;background:linear-gradient(160deg,#2e325f,#171a38);border:12px solid #0b0d20;border-radius:52px;display:grid;place-items:center;position:relative}
+.watch .time{font-size:34px;font-weight:900}.watch .date{color:var(--muted);font-size:13px;text-align:center}
+.hot{position:absolute;width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:var(--acc);color:#231a00;font-weight:900;display:grid;place-items:center;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{transform:scale(1.15)}}
+.pollbar{height:12px;background:#2a2e5c;border-radius:99px;overflow:hidden}.pollbar i{display:block;height:100%;background:var(--acc2)}
+.small{font-size:13px;color:var(--muted)} .center{text-align:center}
+.cert{border:2px dashed rgba(255,176,32,.6);border-radius:18px;padding:20px;text-align:center;background:rgba(255,176,32,.05)}
+@media print{.topbar,.side,.footnav,.no-print{display:none!important}.layout{grid-template-columns:1fr}section.panel{display:block!important;break-inside:avoid}}
+
+/* ===== V2: FULL NGANG + HIỆU ỨNG + TRÌNH CHIẾU + NHẠC + TTS ===== */
+.topbar-in{max-width:none;padding:10px 22px}
+.layout{max-width:none;grid-template-columns:272px minmax(0,1fr);padding:18px 22px 70px}
+main{min-width:0}
+.btn,.rbtn,.tab,.pick,.opt,.navbtn,.card,.flip,.bin,.hot{transition:all .22s ease}
+.btn:hover,.tab:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(255,176,32,.55),0 10px 24px rgba(255,176,32,.22)}
+.btn:active,.rbtn:active,.bin:active{transform:scale(.96)}
+.btn:focus-visible,.rbtn:focus-visible,.tab:focus-visible,.pick:focus-visible,.opt:focus-visible,.navbtn:focus-visible,button:focus-visible{outline:3px solid rgba(45,212,191,.75);outline-offset:2px}
+.btn.primary:hover{box-shadow:0 0 0 1px rgba(255,176,32,.9),0 0 26px rgba(255,176,32,.5)}
+.card:hover{transform:translateY(-3px);border-color:rgba(129,140,248,.65);box-shadow:0 0 0 1px rgba(129,140,248,.35),0 16px 34px rgba(0,0,0,.4),0 0 22px rgba(129,140,248,.18)}
+.navbtn:hover{transform:translateX(4px);box-shadow:inset 3px 0 0 var(--acc)}
+.navbtn.on{box-shadow:inset 3px 0 0 var(--acc),0 0 18px rgba(255,176,32,.18)}
+.pick:hover,.opt:hover{transform:translateY(-2px);border-color:rgba(45,212,191,.7);box-shadow:0 0 0 1px rgba(45,212,191,.35),0 10px 22px rgba(45,212,191,.15)}
+.pick.sel{box-shadow:0 0 0 2px rgba(255,176,32,.6),0 0 22px rgba(255,176,32,.35)}
+.rbtn:hover{border-color:rgba(255,176,32,.75);box-shadow:0 0 16px rgba(255,176,32,.3);transform:translateY(-2px)}
+.tab.on{box-shadow:0 0 0 1px rgba(129,140,248,.8),0 0 20px rgba(129,140,248,.45)}
+.flip:hover .flip-in{filter:drop-shadow(0 0 14px rgba(45,212,191,.3))}
+.bin:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 12px 26px rgba(0,0,0,.35)}
+.hot:hover{box-shadow:0 0 0 4px rgba(255,176,32,.35),0 0 18px rgba(255,176,32,.6)}
+.hero{position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;border-radius:24px;padding:1.5px;background:linear-gradient(120deg,rgba(255,176,32,.7),rgba(45,212,191,.5),rgba(129,140,248,.7),rgba(255,176,32,.7));background-size:300% 300%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:bgrad 7s ease infinite;pointer-events:none}
+@keyframes bgrad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+section.panel.on{border-color:rgba(129,140,248,.4);box-shadow:0 0 0 1px rgba(129,140,248,.18),0 18px 44px rgba(0,0,0,.4),0 0 34px rgba(99,102,241,.12)}
+section.panel.reading{border-color:rgba(45,212,191,.85)!important;box-shadow:0 0 0 2px rgba(45,212,191,.5),0 0 44px rgba(45,212,191,.35)!important}
+input[type=text]:focus,input[type=password]:focus,textarea:focus,select:focus{outline:none;border-color:var(--acc2);box-shadow:0 0 0 3px rgba(45,212,191,.25)}
+select{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#12142e;color:#fff;font-size:14.5px;width:100%}
+input[type=range]{accent-color:var(--acc);width:100%}
+.copyright{max-width:none;margin:0 22px 26px;background:var(--bg2);border:1px solid rgba(255,176,32,.35);border-radius:16px;padding:14px 18px;text-align:center;color:var(--muted);font-size:14px}
+.copyright b{color:var(--acc)}
+.panelbox{position:fixed;right:18px;bottom:18px;z-index:120;width:min(400px,94vw);background:#141636;border:1px solid rgba(45,212,191,.45);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 30px rgba(45,212,191,.15);padding:18px;display:none;max-height:86vh;overflow:auto}
+.panelbox.show{display:block;animation:in .25s ease}
+.panelbox h3{margin:0 0 4px}.panelbox .x{float:right}
+#presentBar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:130;display:none;gap:8px;align-items:center;background:rgba(13,15,34,.95);border:1px solid rgba(255,176,32,.55);border-radius:99px;padding:8px 12px;box-shadow:0 18px 44px rgba(0,0,0,.5),0 0 24px rgba(255,176,32,.2)}
+#presentBar.show{display:flex}
+#presentBar .cnt{font-weight:800;font-size:14px;padding:0 6px;white-space:nowrap}
+body.present .side{display:none!important}
+body.present .layout{grid-template-columns:1fr;padding:12px 26px 96px}
+body.present .hero{display:none}
+body.present .topbar{position:static}
+body.present section.panel{font-size:19px;line-height:1.75;min-height:calc(100vh - 190px);padding:38px 48px;border-radius:26px}
+body.present section.panel h2{font-size:36px}
+body.present .card p,body.present .msg,body.present .opt{font-size:16.5px}
+body.present .footnav,body.present .copyright{display:none}
+body.present .grid.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){body.present section.panel{padding:22px 18px;font-size:17px}body.present .grid.g3{grid-template-columns:1fr}}
+:fullscreen .layout{padding-top:10px}
+:fullscreen body{background:#0c0e22}
+.music-on{box-shadow:0 0 0 1px rgba(45,212,191,.7),0 0 18px rgba(45,212,191,.45)!important}
+
+
+/* ===== V3: BÚT VẼ + HIỆU ỨNG CHUYỂN ĐỘNG KIỂU REMOTION ===== */
+#bgFx{position:fixed;inset:0;z-index:0;pointer-events:none}
+#cursorGlow{position:fixed;width:420px;height:420px;border-radius:50%;pointer-events:none;z-index:3;background:radial-gradient(circle,rgba(129,140,248,.14),rgba(45,212,191,.07) 45%,transparent 70%);transform:translate(-50%,-50%);left:-500px;top:-500px}
+.layout,.copyright{position:relative;z-index:1}
+.toast{z-index:260!important}
+#drawLayer{position:fixed;inset:0;z-index:180;pointer-events:none;touch-action:none}
+#drawLayer.active{pointer-events:auto;cursor:crosshair}
+#penBar{position:fixed;left:50%;bottom:76px;transform:translateX(-50%) translateY(24px);z-index:220;display:flex;gap:7px;align-items:center;background:rgba(13,15,34,.96);border:1px solid rgba(255,176,32,.6);border-radius:99px;padding:8px 12px;box-shadow:0 18px 44px rgba(0,0,0,.55),0 0 24px rgba(255,176,32,.22);opacity:0;pointer-events:none;transition:all .28s cubic-bezier(.2,1.4,.3,1);flex-wrap:wrap;justify-content:center;max-width:96vw}
+#penBar.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
+#penBar .sw{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.35);padding:0}
+#penBar .sw.sel{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.3),0 0 14px currentColor;transform:scale(1.15)}
+#penBar input[type=range]{width:84px}
+.pen-on{box-shadow:0 0 0 1px rgba(255,176,32,.8),0 0 18px rgba(255,176,32,.5)!important}
+.ticker{overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.04);margin:16px 0 18px;-webkit-mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.ticker-in{display:flex;gap:0;width:max-content;animation:tick 26s linear infinite;padding:9px 0;font-weight:700;color:var(--muted);white-space:nowrap}
+.ticker-in span{padding:0 18px}.ticker-in b{color:var(--acc)}
+@keyframes tick{to{transform:translateX(-50%)}}
+.rise{opacity:0;transform:translateY(20px) scale(.975)}
+.rise.in{animation:riseIn .62s cubic-bezier(.16,1.35,.3,1) backwards;animation-delay:var(--d,0s)}
+@keyframes riseIn{from{opacity:0;transform:translateY(20px) scale(.975)}to{opacity:1;transform:none}}
+.hero h1{animation:heroIn .8s cubic-bezier(.16,1.35,.3,1) backwards}
+@keyframes heroIn{from{opacity:0;transform:translateY(16px);letter-spacing:.02em}to{opacity:1;transform:none}}
+.pbar i{background-size:200% 100%;animation:shim 2.2s linear infinite}
+@keyframes shim{from{background-position:0 0}to{background-position:200% 0}}
+.chip{animation:chipIn .5s cubic-bezier(.16,1.35,.3,1) backwards}
+.chip:nth-child(2){animation-delay:.07s}.chip:nth-child(3){animation-delay:.14s}.chip:nth-child(4){animation-delay:.21s}.chip:nth-child(5){animation-delay:.28s}
+@keyframes chipIn{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+.floaty{animation:floaty 5s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:reduce){.ticker-in,.pbar i,.chip,.hero h1{animation:none!important}}
+
+
+/* ===== V4: KHOÁ BỐ CỤC 100% — CHỐNG TRÀN NỘI DUNG ===== */
+html,body{overflow-x:clip;max-width:100%;width:100%}
+body{position:relative}
+.layout{width:100%;max-width:100%;box-sizing:border-box}
+.topbar-in{width:100%;max-width:100%;box-sizing:border-box}
+main,main>*,.layout>*{min-width:0;max-width:100%}
+section.panel,.hero{width:100%;max-width:100%;box-sizing:border-box}
+.grid>*,.tvwrap>*,.binrow>*,.rrow>*,.switchrow>*,.mind>*{min-width:0}
+.grid,.tvwrap,.binrow{max-width:100%}
+.tvwrap{grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr)}
+img,svg,video,canvas,iframe{max-width:100%}
+.card,.act,.kbox,.q,.log,.msg,.sortcard,.face,.cert,.tabpane{overflow-wrap:break-word}
+.log,.q h4,.card p,.face p{overflow-wrap:anywhere}
+.tv .osd{flex-wrap:wrap}
+.tv .chname{overflow-wrap:break-word}
+.ticker{width:100%;max-width:100%;box-sizing:border-box}
+.ticker-in{font-size:14px}
+.ticker-in span{flex:none}
+#presentBar{max-width:96vw;flex-wrap:wrap;justify-content:center}
+#penBar{box-sizing:border-box}
+.pbar{min-width:90px}
+.pct{min-width:0}
+input[type=text],input[type=password],textarea,select{max-width:100%}
+.watch{max-width:100%}
+@media(max-width:560px){.layout{padding:12px 10px 60px}section.panel{padding:18px 14px}.hero{padding:20px 16px}.topbar-in{padding:8px 10px}}
+
+
+/* ===== V5: DẢI Ý CHÍNH XUỐNG HÀNG + NHÂN VẬT TRỢ GIẢNG ===== */
+.ticker{overflow:visible;-webkit-mask:none;mask:none}
+.ticker-in{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 6px;width:100%;max-width:100%;white-space:normal;animation:none;padding:12px 14px}
+.ticker-in span{flex:none;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:99px;padding:5px 13px;animation:tickIn .55s cubic-bezier(.16,1.35,.3,1) backwards}
+.ticker-in span:nth-child(2){animation-delay:.07s}.ticker-in span:nth-child(3){animation-delay:.14s}.ticker-in span:nth-child(4){animation-delay:.21s}.ticker-in span:nth-child(5){animation-delay:.28s}.ticker-in span:nth-child(6){animation-delay:.35s}
+@keyframes tickIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+#mascot{position:fixed;left:16px;bottom:16px;z-index:95;width:104px;text-align:center;animation:mascotFloat 4.5s ease-in-out infinite}
+@keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+#mascot .bubble{position:absolute;left:6px;bottom:calc(100% + 8px);width:228px;max-width:62vw;background:#f7f8ff;color:#1b1e3f;border-radius:14px;padding:9px 12px;font-size:13px;line-height:1.45;text-align:left;box-shadow:0 14px 34px rgba(0,0,0,.45);opacity:0;transform:translateY(6px) scale(.96);pointer-events:none;transition:all .3s cubic-bezier(.16,1.35,.3,1)}
+#mascot .bubble.show{opacity:1;transform:none;pointer-events:auto}
+#mascot .bubble::after{content:"";position:absolute;left:34px;bottom:-7px;border:8px solid transparent;border-top-color:#f7f8ff;border-bottom:0}
+#mascot svg{max-width:100%;height:auto}#mascotBot{cursor:pointer;filter:drop-shadow(0 10px 18px rgba(45,212,191,.35))}
+#mascotBot:hover{filter:drop-shadow(0 10px 22px rgba(255,176,32,.55))}
+#mascot .eye{transform-origin:center;transform-box:fill-box;animation:blink 4.2s infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+#mascot .arm{transform-origin:6px 6px;transform-box:fill-box;animation:wave 2.6s ease-in-out infinite}
+@keyframes wave{0%,60%,100%{transform:rotate(0deg)}70%{transform:rotate(-24deg)}80%{transform:rotate(10deg)}90%{transform:rotate(-18deg)}}
+#mascot .ant-ball{animation:antGlow 1.8s ease-in-out infinite}
+@keyframes antGlow{0%,100%{opacity:.65}50%{opacity:1}}
+#mascotX{position:absolute;top:64px;right:2px;width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(13,15,34,.85);color:#fff;font-size:12px;line-height:1;padding:0;cursor:pointer}
+#mascotOpen{position:fixed;left:16px;bottom:16px;z-index:95;width:46px;height:46px;border-radius:50%;border:1px solid rgba(45,212,191,.6);background:#141636;font-size:22px;display:none;box-shadow:0 10px 24px rgba(0,0,0,.45);cursor:pointer}
+@media(max-width:640px){#mascot{width:80px;left:8px;bottom:8px}#mascot .bubble{width:196px}}
+@media print{#mascot,#mascotOpen{display:none!important}}
+
+
+/* ===== V6: VIỀN VÀNG PHÁT SÁNG + MỞ KHÓA MỤC LỤC + BIT KÉO THẢ & NÓI TTS ===== */
+@keyframes goldPulse{0%,100%{box-shadow:inset 0 0 0 1px rgba(255,214,110,.9),0 0 0 1.5px rgba(255,176,32,.85),0 0 16px rgba(255,176,32,.5),0 0 34px rgba(255,176,32,.22)}50%{box-shadow:inset 0 0 0 1px rgba(255,226,150,1),0 0 0 2.5px rgba(255,196,64,.95),0 0 26px rgba(255,176,32,.75),0 0 52px rgba(255,176,32,.35)}}
+.navbtn.on,.tab.on,.pick.sel{border-color:#ffcf5c!important;animation:goldPulse 1.7s ease-in-out infinite}
+.btn:active,.rbtn:active,.bin:active,.opt:active,.tab:active,.pick:active{border-color:#ffd76e!important;animation:goldPulse .7s ease-in-out infinite}
+.btn:focus-visible,.rbtn:focus-visible{border-color:#ffd76e!important;animation:goldPulse 1.4s ease-in-out infinite}
+.btn.primary{box-shadow:0 0 0 1px rgba(255,214,110,.55),0 6px 20px rgba(255,176,32,.3)}
+.btn.primary:hover{animation:goldPulse 1.7s ease-in-out infinite}
+#penBar .btn.primary{border-color:#ffd76e!important;animation:goldPulse 1.7s ease-in-out infinite}
+.pen-on{border-color:#ffd76e!important;animation:goldPulse 1.7s ease-in-out infinite}
+.navbtn.locked{opacity:.52;cursor:not-allowed}
+.navbtn.locked .dot{background:#33375f;font-size:11px}
+.navbtn.shake{animation:shake .32s}
+.navbtn.fresh{animation:unlockPop .8s cubic-bezier(.16,1.35,.3,1)}
+@keyframes unlockPop{0%{transform:scale(.92);box-shadow:0 0 0 0 rgba(255,176,32,.8)}55%{transform:scale(1.05)}100%{transform:none;box-shadow:0 0 24px rgba(255,176,32,.35)}}
+#mascotBot{cursor:grab;touch-action:none}
+#mascot.dragging{animation:none}
+#mascot.dragging #mascotBot{cursor:grabbing}
+#mascotVoice{position:absolute;top:64px;left:0;width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(13,15,34,.85);color:#fff;font-size:11px;line-height:1;padding:0;cursor:pointer}
+
+
+/* ===== V7: BIT TỰ DI CHUYỂN KIỂU HOẠT HÌNH + HỘP THOẠI NHẬP KEY ===== */
+#mascotBot{transition:transform .3s ease}
+#mascot.walk #mascotBot{animation:bobWalk .34s ease-in-out infinite}
+@keyframes bobWalk{0%,100%{margin-top:0}50%{margin-top:-3.5px}}
+#mascot.hop #mascotBot{animation:hopBot .55s cubic-bezier(.16,1.35,.3,1)}
+@keyframes hopBot{0%{margin-top:0}40%{margin-top:-16px}100%{margin-top:0}}
+#mascot .shadow{height:6px;border-radius:50%;background:rgba(0,0,0,.4);margin:1px auto 0;width:64px;filter:blur(2px)}
+.modalwrap{position:fixed;inset:0;z-index:300;background:rgba(6,8,20,.72);backdrop-filter:blur(5px);display:none;place-items:center;padding:16px}
+.modalwrap.show{display:grid}
+.modal{width:min(540px,96vw);background:#171a38;border:1px solid rgba(255,176,32,.55);border-radius:22px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 40px rgba(255,176,32,.15);animation:riseIn .5s cubic-bezier(.16,1.35,.3,1) backwards}
+.modal h3{margin:0 0 6px;font-size:22px}
+
+
+/* ===== V11: BIT CƯỠI PHI THUYỀN + CỐ ĐỊNH VỊ TRÍ ===== */
+#mascot{width:128px}
+#mascotBot{cursor:pointer}
+#mascot .arm{transform-origin:2px 24px}
+#mascot .saucer-light{animation:antGlow 1.6s ease-in-out infinite}
+#mascot .thrust{animation:antGlow 1.05s ease-in-out infinite}
+#mascotX{top:82px}
+#mascotVoice{top:82px}
+@media(max-width:640px){#mascot{width:104px}}
+
+
+/* ===== BAI 2: HO SO TRUONG + SO DO BUOC ===== */
+.stepflow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 14px}
+.stepchip{background:#262a55;border:1.5px solid var(--acc);padding:8px 14px;border-radius:999px;font-weight:700;font-size:15px}
+.steparr{color:var(--acc2);font-weight:900;font-size:18px}
+.schoolcard{position:relative;background:linear-gradient(160deg,#262963,#1a1c40);border:1.5px solid var(--line);border-radius:18px;padding:20px 56px 20px 20px;min-height:250px}
+.watch{border-radius:22px}
+
+
+/* ===== BAI 3: BANG DANH GIA + CHECKLIST ===== */
+.evalrow{background:#1d1f45;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0}
+.evalrow h4{margin:0 0 4px}
+.evalrow .evbtns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.chkbtn{text-align:left;width:100%}
+.chkbtn.done{border-color:var(--ok);background:rgba(52,211,153,.14)}
+
+
+/* ===== BAI 5: MO PHONG PHA MAU ===== */
+.simbox{background:#1d1f45;border:1.5px solid var(--line);border-radius:16px;padding:16px}
+.simrow{display:grid;grid-template-columns:118px minmax(0,1fr) 48px;gap:10px;align-items:center;margin:9px 0}
+.simrow input[type=range]{width:100%;min-width:0}
+.simswatch{margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.35);min-height:76px;display:flex;align-items:center;justify-content:center;background:#ffffff;padding:8px}
+.simswatch span{background:rgba(10,10,25,.72);color:#fff;padding:5px 12px;border-radius:999px;font-weight:800;font-size:14px;text-align:center}
+
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-in">
+<div class="logo">💻 TIN HỌC 6 <span>• BÀI 13</span></div>
+<div class="pbar"><i id="pfill"></i></div><div class="pct" id="ptxt">Tiến độ: 0%</div>
+<button class="btn small" onclick="togglePresent()">▶ Trình chiếu</button>
+<button class="btn small" id="penBtnTop" onclick="togglePen()">🖊️ Bút vẽ</button>
+<button class="btn small primary" onclick="go('quiz')">Làm bài kiểm tra</button>
+<button class="btn small" id="musicBtn" onclick="toggleMusicPanel()">🎵 Nhạc nền</button>
+<button class="btn small" onclick="toggleTtsPanel()">🎙️ Đọc bằng Gemini AI</button>
+<button class="btn small" onclick="toggleFullscreen()">⛶ Toàn màn hình</button>
+</div></header>
+
+<canvas id="bgFx"></canvas><div id="cursorGlow"></div>
+<div class="layout">
+<nav class="side no-print"><h3>Mục lục bài học</h3><div id="nav"></div>
+<p class="small" style="padding:0 8px">Sách: <b>Kết nối tri thức với cuộc sống</b><br>Chủ đề 1: Máy tính và cộng đồng</p>
+<button class="btn small" style="margin:6px 8px" onclick="resetAll()">↺ Học lại từ đầu</button>
+<button class="btn small" style="margin:0 8px 6px" id="unlockAllBtn" onclick="unlockAllToggle()">🔓 Mở khóa tất cả</button></nav>
+
+<main>
+<div class="hero"><span class="badge">CHỦ ĐỀ 5 • ỨNG DỤNG TIN HỌC</span>
+<h1>Bài 13: <em>Thực hành: Tìm kiếm và thay thế</em></h1>
+<p>Công cụ <b>Tìm kiếm và Thay thế</b> (Find and Replace) giúp em tìm kiếm hoặc thay thế các từ, cụm từ theo yêu cầu một cách <b>nhanh chóng và chính xác</b>, tiết kiệm thời gian và <b>không bỏ sót</b> từ nào. Bài thực hành này hướng dẫn em dùng lệnh <b>Find</b> để tìm từ, lệnh <b>Replace</b> để thay từng từ và <b>Replace All</b> để thay toàn bộ — áp dụng vào văn bản công thức làm kem và cuốn sổ lưu niệm của lớp.</p>
+<div class="chips"><span class="chip">🔍 Find: Home → Editing → Find</span><span class="chip">🔁 Replace: Find what / Replace with</span><span class="chip">⏭️ Find Next: tìm tiếp, bỏ qua</span><span class="chip">💥 Replace All: thay toàn bộ</span><span class="chip">🍦 Thực hành: kem dưa hấu → kem xoài</span><span class="chip">❓ Quiz 10 câu chấm tự động</span><span class="chip">🏆 Chứng nhận hoàn thành</span></div>
+<p style="margin-top:16px"><button class="btn primary" onclick="go('muctieu')">Bắt đầu bài học →</button> <button class="btn" onclick="go('khoi-dong')">Vào phần khởi động</button></p>
+</div>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in" id="tickerIn"></div></div>
+<!-- MUC TIEU -->
+<section class="panel" id="muctieu"><h2>🎯 Mục tiêu bài học</h2><p class="sub">Sau bài học này, em sẽ:</p>
+<div class="grid g3">
+<div class="card"><h4>1️⃣ Trình bày được tác dụng của công cụ</h4><p>Trình bày được tác dụng của công cụ <b>Tìm kiếm và Thay thế</b> trong phần mềm soạn thảo văn bản: tìm và thay từ, cụm từ một cách nhanh chóng, chính xác, không bỏ sót.</p></div>
+<div class="card"><h4>2️⃣ Sử dụng được lệnh Find</h4><p>Thực hiện được thao tác <b>tìm kiếm</b>: thẻ Home → nhóm lệnh Editing → lệnh Find → gõ từ cần tìm, nhấn Enter và định vị đến các từ tìm thấy trong văn bản.</p></div>
+<div class="card"><h4>3️⃣ Sử dụng được lệnh Replace</h4><p>Thực hiện được thao tác <b>thay thế</b>: mở hộp thoại Find and Replace, nhập ô Find what và Replace with, dùng Find Next, Replace, Replace All đúng tình huống (thay từng từ hay thay toàn bộ).</p></div>
+</div>
+<h3>🗺️ Lộ trình bài học</h3>
+<div class="grid g2">
+<div class="card"><h4>Giai đoạn 1</h4><p>Khởi động: trò chơi “Tìm từ” trong 30 giây → Phần 1: Tại sao phải tìm kiếm và thay thế? → Phần 2: Các bước tìm kiếm (3 bước) và thay thế (5 bước) với hộp thoại Find and Replace.</p></div>
+<div class="card"><h4>Giai đoạn 2</h4><p>Phần 3: Thực hành tìm “dưa hấu” và thay bằng “xoài” trong công thức làm kem sữa chua → Luyện tập trang 60 → Vận dụng cho cuốn sổ lưu niệm (SBT 13.7–13.10) → Quiz 10 câu và tổng kết.</p></div>
+</div>
+<div class="footnav"><span></span><button class="btn primary" onclick="done('muctieu');go('khoi-dong')">Tiếp theo: Khởi động →</button></div></section>
+
+<!-- KHOI DONG -->
+<section class="panel" id="khoi-dong"><h2>🚀 Khởi động: Trò chơi “Tìm từ”</h2><p class="sub">Thầy cô chiếu một văn bản và yêu cầu cả lớp tìm trong 30 giây: trong văn bản có bao nhiêu từ “trồng” và bao nhiêu từ “cấy”? Tìm bằng mắt thường vừa chậm vừa dễ sót — đó chính là lí do các phần mềm soạn thảo văn bản trang bị công cụ <b>Tìm kiếm và Thay thế</b>.</p>
+<div class="chat">
+<div class="msg a"><b>An:</b> Nhóm tớ nhận bài viết công thức làm kem sữa chua dưa hấu. Nhưng giờ cả nhóm đổi ý: muốn làm kem sữa chua xoài! Từ “dưa hấu” xuất hiện bao nhiêu lần trong bài ấy nhỉ…</div>
+<div class="msg b"><b>Minh:</b> Đừng sửa tay từng chữ — lâu và dễ sót lắm. Dùng lệnh Replace: tìm “dưa hấu”, thay bằng “xoài”, bấm Replace All là xong cả bài trong vài giây.</div>
+<div class="msg a"><b>An:</b> Thế nếu có chỗ tớ không muốn thay thì sao?</div>
+<div class="msg b"><b>Minh:</b> Thì đừng Replace All — dùng Find Next để tìm từng từ, chỗ nào muốn thay mới bấm Replace. Lát nữa thực hành em sẽ rõ!</div>
+</div>
+<div class="act" style="margin-top:16px"><span class="tag">Khởi động • Bình chọn nhanh</span>
+<h3 style="margin-top:6px">Nhận định nào ĐÚNG về công cụ tìm kiếm và thay thế? Chạm để chọn:</h3>
+<div id="poll"></div><p class="small" id="pollNote">Hãy chọn tất cả nhận định em cho là đúng, rồi bấm “Xem đáp án”.</p>
+<button class="btn teal" onclick="pollAnswer()">Xem đáp án</button> <span id="pollResult" style="font-weight:800"></span></div>
+<div class="footnav"><button class="btn" onclick="go('muctieu')">← Mục tiêu</button><button class="btn primary" onclick="done('khoi-dong');go('phan1')">Tiếp theo: Phần 1 — Tại sao phải tìm kiếm và thay thế? →</button></div></section>
+
+<!-- PHAN 1 -->
+<section class="panel" id="phan1"><h2>1. Tại sao phải tìm kiếm và thay thế văn bản?</h2>
+<p class="sub">Các phần mềm soạn thảo văn bản đều có công cụ <b>Tìm kiếm và Thay thế</b> (Find and Replace). Công cụ này giúp chúng ta tìm kiếm hoặc thay thế các từ hoặc cụm từ theo yêu cầu một cách <b>nhanh chóng và chính xác</b>; vì vậy <b>tiết kiệm thời gian</b> và <b>không bỏ sót</b> từ nào.</p>
+<div class="kbox"><b>Ví dụ mở đầu:</b> Cần thay “dưa hấu” bằng “xoài” trong công thức làm kem sữa chua. Nếu sửa tay, em phải đọc lại cả bài và rất dễ bỏ sót một vài chỗ. Dùng công cụ Tìm kiếm và Thay thế, mọi từ “dưa hấu” trong văn bản đều được tìm thấy và thay bằng “xoài” chỉ sau vài thao tác.</div>
+
+<div class="act" style="margin-top:16px"><span class="tag">Trải nghiệm • Giải phẫu hộp thoại Find and Replace</span>
+<h3 style="margin-top:6px">Chạm vào từng thành phần của hộp thoại để hiểu công dụng:</h3>
+<div class="simbox">
+<div class="grid g4" id="ioGrid" style="gap:8px"></div>
+<div class="stepflow" style="justify-content:center;margin:14px 0;flex-wrap:wrap"><span class="stepchip" id="ioFrom">👉 Hãy chọn một thành phần</span><span class="steparr" id="ioArr1">→</span><span class="stepchip" id="ioMid">🪟 Hộp thoại Find and Replace</span><span class="steparr" id="ioArr2">→</span><span class="stepchip" id="ioTo">…</span></div>
+<div class="card"><h4 id="ioTitle">Giải phẫu hộp thoại</h4><p id="ioDesc">Chạm vào một thành phần ở phía trên để biết nó dùng để làm gì.</p><div class="log" id="ioLog"><div>Nhật kí giải phẫu sẽ hiện ở đây…</div></div></div>
+</div></div>
+
+<h3>🧰 8 thẻ kiến thức — chạm vào từng thẻ để tìm hiểu</h3>
+<div class="grid g4" id="deviceGrid"></div>
+
+<div class="act" style="margin-top:16px"><span class="tag">Hoạt động SGK • Khám phá</span>
+<h3 style="margin-top:6px">Tìm hiểu sâu — chạm vào từng mục:</h3>
+<div class="simbox">
+<div class="grid g4" id="mmGrid" style="gap:8px"></div>
+<div class="card" style="margin-top:12px"><h4 id="mmTitle">Hãy chọn một mục để bắt đầu</h4><p id="mmTxt">Các câu hỏi then chốt của SBT (13.1, 13.2, 13.6, 13.9) được gói trong 4 mục dưới đây.</p><p id="mmAtt" style="margin-bottom:0"></p></div>
+</div></div>
+
+<div class="act" style="margin-top:16px"><span class="tag">Thử thách tư duy • Nếu sửa tay từng từ</span>
+<h3 style="margin-top:6px">Nếu cứ đọc và sửa tay từng từ trong văn bản dài thì sao?</h3>
+<div class="switchrow"><button class="btn" id="killBtn" onclick="toggleWorld()">✍️ Thử sửa tay từng từ</button><span class="small" id="worldTxt">Đang dùng công cụ: tìm và thay toàn bộ trong vài giây — nhanh, chính xác, không sót.</span></div>
+<div class="grid g3" id="worldGrid" style="margin-top:12px"></div></div>
+
+<div class="footnav"><button class="btn" onclick="go('khoi-dong')">← Khởi động</button><button class="btn primary" onclick="done('phan1');go('phan2')">Tiếp theo: Phần 2 — Sử dụng công cụ tìm kiếm và thay thế →</button></div></section>
+
+<!-- PHAN 2 -->
+<section class="panel" id="phan2"><h2>2. Sử dụng công cụ tìm kiếm và thay thế</h2>
+<p class="sub">Cả hai lệnh <b>Find</b> và <b>Replace</b> đều nằm trong nhóm lệnh <b>Editing</b> của thẻ <b>Home</b>. Hãy thuộc lòng hai quy trình dưới đây — đây là nội dung thực hành chính của bài.</p>
+<div class="grid g2">
+<div class="card"><h4>🔍 Tìm kiếm — 3 bước</h4><p><b>Bước 1:</b> Nháy chuột vào thẻ Home.<br><b>Bước 2:</b> Trong nhóm lệnh Editing, chọn lệnh Find (hiển thị hộp thoại Navigation ở bên trái).<br><b>Bước 3:</b> Gõ từ, cụm từ cần tìm rồi nhấn phím Enter. Nháy chuột vào từng kết quả trong hộp thoại Navigation để định vị con trỏ đến từ đó trong văn bản.</p></div>
+<div class="card"><h4>🔁 Thay thế — 5 bước</h4><p><b>Bước 1:</b> Nháy chuột vào thẻ Home, trong nhóm lệnh Editing chọn lệnh Replace (hiển thị hộp thoại Find and Replace).<br><b>Bước 2:</b> Gõ từ, cụm từ cần tìm vào ô Find what.<br><b>Bước 3:</b> Gõ từ, cụm từ thay thế vào ô Replace with.<br><b>Bước 4:</b> Nháy Find Next để tìm, nháy Replace để thay thế từ vừa tìm được, hoặc nháy Replace All để thay thế toàn bộ.<br><b>Bước 5:</b> Nháy Cancel để kết thúc và đóng hộp thoại.</p></div>
+</div>
+<div class="kbox"><b>Mẹo thực hành:</b> Trước khi bấm Replace All, hãy cân nhắc: có từ nào trùng khớp nhưng <b>không</b> nên thay không? Nếu có, hãy dùng Find Next + Replace để thay chọn lọc từng từ. Thay nhầm cả loạt thì dùng Undo (Ctrl + Z) để khôi phục rồi làm lại cẩn thận hơn.</div>
+
+<h3>🃏 4 thẻ lật — bốn nút lệnh trong hộp thoại Find and Replace</h3>
+<p class="sub">Chạm để lật 4 thẻ:</p>
+<div class="grid g4" id="flipGrid"></div>
+
+<div class="act"><span class="tag">Trò chơi • Ghép nối (SBT Câu 13.4)</span>
+<h3 style="margin-top:6px">Ghép mỗi nút lệnh với tác dụng của nó</h3>
+<p class="small">Cách chơi: chạm chọn 1 nút lệnh ở cột trái, rồi chạm chọn tác dụng ở cột phải. Đúng được +1 điểm.</p>
+<div class="grid g2"><div id="matchL"></div><div id="matchR"></div></div>
+<p class="scorebox">Điểm: <span id="matchScore">0</span>/4 <span id="matchMsg" style="color:var(--acc2)"></span></p></div>
+
+<h3>🗂️ Tìm hiểu thêm</h3>
+<p class="sub">Chọn từng thẻ để xem chi tiết:</p>
+<div class="tabs" id="domainTabs"></div><div id="domainPane"></div>
+
+<div class="footnav"><button class="btn" onclick="go('phan1')">← Phần 1</button><button class="btn primary" onclick="done('phan2');go('phan3')">Tiếp theo: Phần 3 — Thực hành →</button></div></section>
+
+<!-- PHAN 3 -->
+<section class="panel" id="phan3"><h2>3. Thực hành: Kem sữa chua dưa hấu → Kem sữa chua xoài</h2>
+<p class="sub">Nhiệm vụ thực hành của bài: trong bài viết công thức làm kem sữa chua của nhóm, hãy <b>tìm kiếm từ “dưa hấu”</b> và <b>thay thế bằng từ “xoài”</b> để có công thức làm kem sữa chua xoài.</p>
+<div class="stepflow"><span class="stepchip">1️⃣ Mở văn bản công thức làm kem</span><span class="steparr">→</span><span class="stepchip">2️⃣ Home → Editing → Find: tìm “dưa hấu”, xem có mấy từ</span><span class="steparr">→</span><span class="stepchip">3️⃣ Home → Editing → Replace</span><span class="steparr">→</span><span class="stepchip">4️⃣ Find what: dưa hấu — Replace with: xoài</span><span class="steparr">→</span><span class="stepchip">5️⃣ Replace All → Cancel → đọc lại văn bản kiểm tra</span></div>
+<div class="grid g3" style="margin-top:14px">
+<div class="card"><h4>🔍 Nhiệm vụ tìm kiếm</h4><p>Thực hiện thao tác tìm kiếm từ “dưa hấu” có trong bài viết của nhóm: thẻ Home → Editing → Find → gõ “dưa hấu” → nhấn Enter. Đếm số từ tìm thấy và nháy vào từng kết quả để xem vị trí của chúng trong bài.</p></div>
+<div class="card"><h4>🔁 Nhiệm vụ thay thế</h4><p>Thực hiện thao tác thay thế từ “dưa hấu” thành “xoài”: mở hộp thoại Find and Replace, ô Find what gõ “dưa hấu”, ô Replace with gõ “xoài”, nháy Replace All để thay thế toàn bộ, rồi nháy Cancel để kết thúc.</p></div>
+<div class="card"><h4>📖 Kiểm tra kết quả</h4><p>Đọc lại toàn bộ công thức sau khi thay thế: mọi chỗ “dưa hấu” đã thành “xoài” chưa? Câu văn có hợp nghĩa không (ví dụ: “gọt vỏ xoài, cắt miếng nhỏ”)? Nếu còn sót hoặc thay nhầm, em làm lại hoặc dùng Undo để khôi phục.</p></div>
+</div>
+<div class="kbox"><b>Lưu ý:</b> Gõ đúng chính tả ở cả hai ô — “dưa hấu” có dấu cách và dấu; nếu gõ sai, công cụ sẽ báo không tìm thấy. Sau khi Replace All, phần mềm thường thông báo số từ đã được thay thế — hãy ghi lại con số đó để báo cáo kết quả thực hành.</div>
+
+<div class="act"><span class="tag">Trò chơi • Phân loại Đúng / Sai</span>
+<h3 style="margin-top:6px">Phát biểu sau đây ĐÚNG hay SAI?</h3>
+<p class="small">Đọc phát biểu ở giữa, rồi chọn nút phân loại đúng. Được 6/6 là xuất sắc!</p>
+<div class="sortcard" id="sortCard">Bấm “Bắt đầu” để chơi</div>
+<div class="binrow"><button class="bin pos" onclick="sortPick(true)">✔️ ĐÚNG</button><button class="bin neg" onclick="sortPick(false)">✖️ SAI</button></div>
+<p class="scorebox">Điểm: <span id="sortScore">0</span>/6 &nbsp; <button class="btn small teal" onclick="sortNext(true)">Bắt đầu / Chơi lại</button> <span id="sortMsg" style="color:var(--acc2);font-size:14px"></span></p></div>
+
+<h3>✍️ Tự liên hệ</h3>
+<div class="card"><p style="margin-top:0">Em đã bao giờ phải sửa cùng một lỗi ở nhiều chỗ trong văn bản chưa?</p>
+<input type="text" id="myApp" placeholder="Ví dụ: Em gõ sai tên bạn ở 5 chỗ trong sổ lưu niệm…">
+<textarea id="myUse" style="margin-top:9px" placeholder="Lúc đó em sửa bằng cách nào? Nếu dùng Replace All thì em sẽ gõ gì vào hai ô Find what và Replace with?…"></textarea>
+<p><button class="btn teal" onclick="saveReflect()">💾 Lưu bài tự liên hệ</button> <span class="small" id="reflectMsg"></span></p></div>
+<div class="footnav"><button class="btn" onclick="go('phan2')">← Phần 2</button><button class="btn primary" onclick="done('phan3');go('luyentap')">Tiếp theo: Luyện tập &amp; Vận dụng →</button></div></section>
+
+<!-- LUYEN TAP -->
+<section class="panel" id="luyentap"><h2>🏋️ Luyện tập &amp; Vận dụng</h2>
+<h3>Luyện tập — SGK trang 60</h3>
+<div class="card"><h4>Câu 1. Nêu các bước thực hiện việc tìm kiếm một từ hoặc cụm từ trong văn bản</h4>
+<p style="margin-bottom:0"><b>Đáp án (SBT Câu 13.3):</b> (1) Nháy chuột chọn thẻ Home. (2) Trong nhóm lệnh Editing chọn Find. (3) Gõ từ hoặc cụm từ cần tìm kiếm rồi nhấn phím Enter. Sau đó nháy vào các kết quả trong hộp thoại Navigation để định vị đến các từ tìm thấy trong văn bản.</p></div>
+<div class="card" style="margin-top:12px"><h4>Câu 2. Nêu các bước thực hiện việc thay thế một từ hoặc cụm từ trong văn bản</h4>
+<p style="margin-bottom:0"><b>Đáp án (SBT Câu 13.5):</b> (1) Trong nhóm lệnh Editing của thẻ Home, chọn lệnh Replace. (2) Gõ từ, cụm từ cần tìm vào ô Find what. (3) Gõ từ, cụm từ thay thế vào ô Replace with. (4) Chọn Replace để thay thế lần lượt từng từ tìm được, hoặc chọn Replace All để thay thế toàn bộ các từ tìm được. (5) Nháy Cancel để kết thúc.</p></div>
+<div class="card" style="margin-top:12px"><h4>Câu 3 (SBT Câu 13.2 và 13.6). Điền từ thích hợp</h4>
+<p style="margin-bottom:0">a) Để <b>tìm kiếm</b> một từ hoặc cụm từ trong văn bản, em chọn lệnh Find. &nbsp; b) Để <b>thay thế</b> một từ hoặc cụm từ tìm kiếm được bằng một từ hoặc cụm từ khác, em dùng lệnh Replace. &nbsp; Hoàn thiện đoạn văn: “Công cụ Tìm kiếm và <b>Thay thế</b> giúp chúng ta tìm kiếm hoặc thay thế các từ hoặc cụm từ theo <b>yêu cầu</b> một cách nhanh chóng và chính xác.”</p></div>
+<h3>Vận dụng — Tình huống với cuốn sổ lưu niệm và bài viết của An</h3>
+<p class="sub">Chạm vào các điểm 1, 2, 3, 4 để xem hướng dẫn và đáp án.</p>
+<div class="grid g2"><div><div class="watch"><div><div class="time">🔍 VẬN DỤNG</div><div class="date">Tìm kiếm và thay thế trong thực tế<br>🍦 Cốm Làng Vòng • 📒 Sổ lưu niệm • ✍️ Sửa lỗi hàng loạt • 🎯 Thay chọn lọc</div></div>
+<button class="hot" style="top:26px;left:24px" onclick="watchInfo(0)">1</button>
+<button class="hot" style="top:26px;right:24px" onclick="watchInfo(1)">2</button>
+<button class="hot" style="bottom:26px;left:24px" onclick="watchInfo(2)">3</button>
+<button class="hot" style="bottom:26px;right:24px" onclick="watchInfo(3)">4</button></div></div>
+<div class="card"><h4 id="watchTitle">🔍 Bốn điểm chạm vận dụng</h4><p id="watchTxt">Từ bài viết giới thiệu cốm Làng Vòng của bạn An (SBT Câu 13.7–13.10) đến cuốn sổ lưu niệm của lớp em — chạm vào một điểm số để xem cách dùng công cụ Tìm kiếm và Thay thế cho từng tình huống.</p></div></div>
+<div class="footnav"><button class="btn" onclick="go('phan3')">← Phần 3</button><button class="btn primary" onclick="done('luyentap');go('quiz')">Tiếp theo: Kiểm tra 10 câu →</button></div></section>
+
+<!-- QUIZ -->
+<section class="panel" id="quiz"><h2>❓ Kiểm tra cuối bài — 10 câu trắc nghiệm</h2>
+<p class="sub">Chọn đáp án cho từng câu; hệ thống chấm ngay và giải thích. Đạt từ 8/10 sẽ nhận chứng nhận hoàn thành!</p>
+<input type="text" id="stuName" placeholder="Nhập họ tên của em trước khi làm bài…">
+<div id="quizBox"></div>
+<p><button class="btn primary" onclick="finishQuiz()">Nộp bài &amp; xem kết quả</button> <span class="scorebox">Điểm hiện tại: <span id="quizScore">0</span>/10</span></p>
+<div class="cert" id="cert" style="display:none"><div style="font-size:34px">🏆</div><h3 style="margin:4px 0">CHỨNG NHẬN HOÀN THÀNH</h3><p id="certTxt" style="color:var(--ink)"></p><p class="small">Tin học 6 — Bài 13: Thực hành: Tìm kiếm và thay thế • Sách Kết nối tri thức với cuộc sống</p><p class="small">© 2026 By Hoàng Kim Long — Email: tonyhoang.oliver@gmail.com</p><button class="btn small no-print" onclick="window.print()">🖨️ In chứng nhận / bài học</button></div>
+<div class="footnav"><button class="btn" onclick="go('luyentap')">← Luyện tập</button><button class="btn primary" onclick="go('tongket')">Tổng kết bài học →</button></div></section>
+
+<!-- TONG KET -->
+<section class="panel" id="tongket"><h2>🧭 Tổng kết bài học</h2>
+<div class="mind"><div class="center">🔍 TÌM KIẾM VÀ THAY THẾ</div>
+<div class="grid g3" style="width:100%">
+<div class="card"><h4>1. Tác dụng</h4><p>Công cụ Tìm kiếm và Thay thế giúp tìm kiếm hoặc thay thế các từ, cụm từ theo yêu cầu một cách nhanh chóng và chính xác, tiết kiệm thời gian và không bỏ sót từ nào.</p></div>
+<div class="card"><h4>2. Tìm kiếm</h4><p>Thẻ Home → nhóm Editing → Find → gõ từ cần tìm, nhấn Enter → nháy vào kết quả trong hộp thoại Navigation để định vị trong văn bản.</p></div>
+<div class="card"><h4>3. Thay thế</h4><p>Home → Editing → Replace → Find what: từ cần tìm; Replace with: từ thay thế → Find Next (tìm tiếp/bỏ qua), Replace (thay từ hiện tại), Replace All (thay toàn bộ) → Cancel kết thúc. Chỉ thay một số từ thì dùng Find Next + Replace chọn lọc.</p></div>
+</div></div>
+<div class="kbox" style="margin-top:16px"><b>🎒 Chuẩn bị bài sau:</b> Bài 14 — Thực hành tổng hợp: Hoàn thiện Sổ lưu niệm. Đây là buổi thực hành tổng kết Chủ đề 5: em sẽ vận dụng tất cả những gì đã học — định dạng văn bản (Bài 11), trình bày dạng bảng (Bài 12), tìm kiếm và thay thế (Bài 13) — để hoàn thiện cuốn sổ lưu niệm của lớp mình. Hãy chuẩn bị sẵn các bài viết và hình ảnh của nhóm em nhé.</div>
+<p class="center" style="margin-top:18px"><button class="btn primary" onclick="done('tongket');toast('Chúc mừng em đã hoàn thành Bài 13! 🎉')">✔ Đánh dấu hoàn thành bài học</button></p>
+<div class="footnav"><button class="btn" onclick="go('quiz')">← Kiểm tra</button><span></span></div></section>
+
+</main></div>
+
+<footer class="copyright">© 2026 <b>By Hoàng Kim Long</b> — Email: <a href="mailto:tonyhoang.oliver@gmail.com">tonyhoang.oliver@gmail.com</a><br><span class="small">Bài giảng tương tác HTML5 — Tin học 6, Bài 13: Thực hành: Tìm kiếm và thay thế • Sách Kết nối tri thức với cuộc sống • Mọi quyền được bảo lưu.</span></footer>
+
+
+<div id="mascot">
+<div class="bubble show" id="mascotBubble">Chào em! Mình là <b>Bit</b> — bạn đồng hành trong bài học này. Hôm nay là buổi thực hành tìm kiếm và thay thế: dùng lệnh Find để tìm nhanh một từ trong văn bản dài và lệnh Replace để thay hàng loạt — như sửa cả công thức kem sữa chua dưa hấu thành kem sữa chua xoài chỉ trong vài giây. Bấm vào mình để nghe gợi ý!"mascotX" onclick="toggleMascot(false)" title="Ẩn bạn đồng hành">✕</button>
+<button id="mascotVoice" onclick="toggleMascotVoice(event)" title="Bật / tắt giọng nói của Bit">🔊</button>
+<svg id="mascotBot" width="124" height="112" viewBox="0 0 120 112" onclick="mascotBotTap()" role="img" aria-label="Bạn đồng hành Bit cưỡi phi thuyền">
+<ellipse class="thrust" cx="60" cy="103" rx="11" ry="4" fill="#2dd4bf" opacity=".55"/>
+<path d="M33 68 A27 25 0 0 1 87 68 Z" fill="rgba(160,200,255,.15)" stroke="rgba(180,220,255,.55)" stroke-width="1.6"/>
+<line x1="60" y1="15" x2="60" y2="26" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round"/>
+<circle class="ant-ball" cx="60" cy="13" r="4.5" fill="#ffb020"/>
+<rect x="38" y="26" width="44" height="34" rx="12" fill="#262a55" stroke="#2dd4bf" stroke-width="2.5"/>
+<circle class="eye" cx="51" cy="42" r="4.6" fill="#2dd4bf"/>
+<circle class="eye" cx="69" cy="42" r="4.6" fill="#2dd4bf"/>
+<path d="M52 51 Q60 57 68 51" stroke="#ffb020" stroke-width="3" fill="none" stroke-linecap="round"/>
+<circle cx="44" cy="49" r="3" fill="#fb7185" opacity=".75"/><circle cx="76" cy="49" r="3" fill="#fb7185" opacity=".75"/>
+<rect x="47" y="60" width="26" height="12" rx="6" fill="#1e2147" stroke="#818cf8" stroke-width="2"/>
+<g class="arm"><path d="M84 62 Q98 55 100 41" stroke="#2dd4bf" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="100" cy="39" r="5" fill="#ffb020"/></g>
+<path d="M36 62 Q26 68 24 78" stroke="#818cf8" stroke-width="6" fill="none" stroke-linecap="round"/>
+<ellipse cx="60" cy="76" rx="34" ry="8" fill="#3a3f7d"/>
+<ellipse cx="60" cy="81" rx="48" ry="14" fill="#2b2f63" stroke="#818cf8" stroke-width="2.5"/>
+<circle class="saucer-light" cx="29" cy="83" r="3.4" fill="#ffb020"/>
+<circle class="saucer-light" cx="60" cy="88" r="3.4" fill="#2dd4bf" style="animation-delay:.45s"/>
+<circle class="saucer-light" cx="91" cy="83" r="3.4" fill="#fb7185" style="animation-delay:.9s"/>
+<ellipse cx="60" cy="95" rx="16" ry="6" fill="#1e2147" stroke="#2dd4bf" stroke-width="1.6"/>
+</svg>
+</div>
+<button id="mascotOpen" onclick="toggleMascot(true)" title="Hiện bạn đồng hành Bit">🤖</button>
+<canvas id="drawLayer"></canvas>
+<div id="penBar">
+<button class="btn small primary" onclick="penMode('pen',this)">🖊️ Bút</button>
+<button class="btn small" onclick="penMode('hl',this)">🖍️ Dạ quang</button>
+<button class="btn small" onclick="penMode('erase',this)">🧽 Tẩy</button>
+<button class="sw sel" style="background:#f87171;color:#f87171" onclick="penColor('#f87171',this)" aria-label="Đỏ"></button>
+<button class="sw" style="background:#ffb020;color:#ffb020" onclick="penColor('#ffb020',this)" aria-label="Vàng"></button>
+<button class="sw" style="background:#2dd4bf;color:#2dd4bf" onclick="penColor('#2dd4bf',this)" aria-label="Ngọc"></button>
+<button class="sw" style="background:#ffffff;color:#ffffff" onclick="penColor('#ffffff',this)" aria-label="Trắng"></button>
+<input type="range" id="penSize" min="2" max="14" value="4" title="Cỡ nét">
+<button class="btn small" onclick="clearDraw()">🗑️ Xoá hết</button>
+<button class="btn small" onclick="togglePen(false)">✕ Đóng bút</button>
+</div>
+
+
+<div class="modalwrap" id="adminModal"><div class="modal">
+<h3 id="adminTitle">🔐 Mở khóa tất cả</h3>
+<p style="color:var(--muted)" id="adminDesc">Nhập mật khẩu admin để mở khóa tất cả các phần.</p>
+<label class="small" id="adminPwLabel">Mật khẩu admin</label>
+<input type="password" id="adminPw" placeholder="Nhập mật khẩu…" autocomplete="off">
+<div id="adminNewWrap" style="display:none;margin-top:10px"><label class="small" id="adminPw2Label">Nhập lại mật khẩu</label>
+<input type="password" id="adminPw2" placeholder="Nhập mật khẩu mới…" autocomplete="off"></div>
+<p style="display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 4px"><button class="btn primary" onclick="submitAdmin()">✔ Xác nhận</button><button class="btn" onclick="closeAdmin()">Hủy</button><button class="btn ghost" id="adminChangeBtn" onclick="openAdminModal('change')">Đổi mật khẩu admin</button></p>
+<p class="small" id="adminStatus"></p>
+</div></div>
+<div class="modalwrap" id="keyModal"><div class="modal">
+<h3>🎙️ Nhập API key để có giọng đọc hay nhất</h3>
+<p style="color:var(--muted)">Trước khi bắt đầu, hãy nhập <b style="color:var(--ink)">Gemini API key của riêng bạn</b> — Bit sẽ đọc thuyết minh bằng giọng AI tự nhiên (giọng Charon) thay cho giọng máy khô cứng. Key chỉ lưu trong trình duyệt trên máy này, không nằm trong file bài giảng và không gửi đi nơi nào khác ngoài Google AI.</p>
+<label class="small">Gemini API key</label>
+<input type="password" id="firstKey" placeholder="Dán API key của bạn vào đây…" autocomplete="off">
+<p class="small">Chưa có key? <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Lấy key miễn phí tại Google AI Studio</a>. Bạn cũng có thể thêm key dự phòng của chính mình trong panel “🎙️ Đọc bằng Gemini AI” — hệ thống sẽ tự xoay vòng sang key dự phòng khi key chính hết hạn mức.</p>
+<p style="display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 4px"><button class="btn primary" onclick="saveFirstKey()">💾 Lưu key &amp; bắt đầu học</button><button class="btn" onclick="closeKeyModal()">Bỏ qua — dùng giọng máy</button></p>
+<p class="small" id="firstKeyStatus"></p>
+</div></div>
+<div class="panelbox" id="musicPanel"><button class="btn small ghost x" onclick="toggleMusicPanel()">✕</button>
+<h3>🎵 Nhạc nền học tập</h3><p class="small">Nhạc được tổng hợp trực tiếp bằng WebAudio ngay trong trình duyệt — nhẹ nhàng, không lời, không bản quyền, không cần file nhạc.</p>
+<label class="small">Bản nhạc nền — 10 bản tổng hợp sẵn (không bản quyền), hoặc tải nhạc của bạn lên</label>
+<select id="musicTrack"><option value="random">🎲 Ngẫu nhiên — tự đổi bài</option><option value="0">1. Bình minh học tập</option><option value="1">2. Gió nhẹ qua trang sách</option><option value="2">3. Piano mưa rơi</option><option value="3">4. Sóng biển thư giãn</option><option value="4">5. Rừng xanh yên tĩnh</option><option value="5">6. Hoàng hôn ấm áp</option><option value="6">7. Không gian tập trung</option><option value="7">8. Giai điệu vui tươi</option><option value="8">9. Đêm sao yên bình</option><option value="9">10. Năng lượng buổi sáng</option><option value="upload" disabled>🎵 Nhạc tải lên (chưa chọn file)</option></select>
+<p style="display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 4px"><button class="btn small" onclick="randomTrackNow()">🎲 Đổi bài ngẫu nhiên</button><button class="btn small" onclick="document.getElementById('musicUpload').click()">📁 Tải nhạc của bạn lên</button><input type="file" id="musicUpload" accept="audio/*" style="display:none"></p>
+<p class="small">Nhạc tải lên chỉ phát trong lần mở trang này (không lưu vào file bài giảng).</p>
+<label class="small" style="display:block;margin-top:10px">Âm lượng: <b id="musicVolTxt">20%</b></label>
+<input type="range" id="musicVol" min="0" max="60" value="20">
+<p style="margin:10px 0"><button class="btn teal" id="musicToggle" onclick="toggleMusic()">▶ Bật nhạc nền</button></p>
+<label class="small"><input type="checkbox" id="sfxOn" checked> Bật âm thanh trả lời đúng / sai</label>
+<p class="small" id="musicStatus">Đang tắt.</p></div>
+
+<div class="panelbox" id="ttsPanel"><button class="btn small ghost x" onclick="toggleTtsPanel()">✕</button>
+<h3>🎙️ Đọc bằng Gemini TTS (giọng AI)</h3>
+<p class="small">Nhập Gemini API key của riêng bạn — key chỉ lưu trong trình duyệt này (localStorage), không gửi đi nơi nào khác ngoài Google AI. Chưa có key? <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Lấy key miễn phí tại Google AI Studio</a> — tuyệt đối không dán key vào khung chat.</p>
+<label class="small">Gemini API key</label>
+<input type="password" id="gemKey" placeholder="Dán API key vào đây…" autocomplete="off">
+<p style="margin:9px 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small teal" onclick="saveGemKey()">💾 Lưu key</button><button class="btn small" onclick="testGemKey()">🔌 Kiểm tra kết nối</button><button class="btn small" onclick="clearGemKey()">Xoá key</button></p>
+<label class="small">Key dự phòng của bạn (không bắt buộc — mỗi dòng 1 key, chỉ lưu trên máy này; hệ thống tự xoay vòng khi key chính hết hạn mức)</label>
+<textarea id="gemKeyPool" placeholder="Dán thêm key dự phòng của bạn, mỗi key một dòng…"></textarea>
+<p style="margin:8px 0"><button class="btn small teal" onclick="saveKeyPool()">💾 Lưu danh sách key dự phòng</button> <span class="small" id="poolStatus"></span></p>
+<label class="small">Giọng đọc</label>
+<select id="gemVoice"><option value="Charon" selected>Charon — giọng trầm, điềm đạm (mặc định)</option><option value="Kore">Kore — giọng rõ ràng, dễ nghe</option><option value="Zephyr">Zephyr — giọng sáng</option><option value="Aoede">Aoede — giọng nhẹ nhàng</option><option value="Puck">Puck — giọng vui tươi</option></select>
+<p style="margin:12px 0;display:grid;gap:8px">
+<button class="btn primary" onclick="readCurrentGemini()">▶ Đọc phần đang mở</button>
+<button class="btn teal" onclick="readAllGemini()">▶▶ Đọc toàn bộ bài — tự động chuyển phần</button>
+<span style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="pauseResumeTts()">⏸ Tạm dừng / Tiếp tục</button><button class="btn" style="flex:1" onclick="stopTts()">⏹ Dừng đọc</button></span>
+<button class="btn ghost" onclick="speakCurrent()">Hoặc đọc bằng giọng máy của trình duyệt (không cần key)</button></p>
+<p class="small" id="ttsStatus">Sẵn sàng. Hãy lưu key rồi chọn “Đọc toàn bộ bài”.</p></div>
+
+<div id="presentBar"><button class="btn small" onclick="presentNav(-1)">← Trước</button><span class="cnt" id="presentCnt">Phần 1/8</span><button class="btn small" onclick="presentNav(1)">Tiếp →</button><button class="btn small" onclick="togglePen()">🖊️ Bút vẽ</button><button class="btn small" onclick="toggleFullscreen()">⛶ Toàn màn hình</button><button class="btn small primary" onclick="togglePresent()">Thoát trình chiếu</button></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SECTIONS=[["muctieu", "🎯 Mục tiêu"], ["khoi-dong", "🚀 Khởi động"], ["phan1", "1️⃣ Tại sao phải tìm kiếm và thay thế?"], ["phan2", "2️⃣ Sử dụng công cụ tìm kiếm và thay thế"], ["phan3", "3️⃣ Thực hành: Kem sữa chua dưa hấu → xoài"], ["luyentap", "🏋️ Luyện tập & Vận dụng"], ["quiz", "❓ Kiểm tra 10 câu"], ["tongket", "🧭 Tổng kết"]];;;;;;;;;;;;
+let cur="muctieu", doneSet=new Set(JSON.parse(localStorage.getItem("tin6b13_done")||"[]"));
+const nav=document.getElementById("nav");
+SECTIONS.forEach(([id,label])=>{const b=document.createElement("button");b.className="navbtn";b.id="nav-"+id;b.innerHTML=`<span class="dot">${doneSet.has(id)?"✓":"•"}</span>${label}`;b.onclick=()=>go(id);nav.appendChild(b)});
+function go(id){cur=id;document.querySelectorAll("section.panel").forEach(s=>s.classList.toggle("on",s.id===id));document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("on",b.id==="nav-"+id));window.scrollTo({top:0,behavior:"smooth"});upd()}
+function done(id){doneSet.add(id);localStorage.setItem("tin6b13_done",JSON.stringify([...doneSet]));const n=document.getElementById("nav-"+id);if(n){n.classList.add("done");n.querySelector(".dot").textContent="✓"}upd()}
+function upd(){SECTIONS.forEach(([id])=>{const n=document.getElementById("nav-"+id);if(n&&doneSet.has(id)){n.classList.add("done");n.querySelector(".dot").textContent="✓"}});const p=Math.round(doneSet.size/SECTIONS.length*100);document.getElementById("pfill").style.width=p+"%";document.getElementById("ptxt").textContent=`Tiến độ: ${p}% (${doneSet.size}/${SECTIONS.length} phần)`}
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600)}
+function resetAll(){localStorage.removeItem("tin6b13_done");doneSet=new Set();document.querySelectorAll(".navbtn").forEach(b=>{b.classList.remove("done");b.querySelector(".dot").textContent="•"});upd();toast("Đã xoá tiến độ — bắt đầu lại từ đầu!")}
+function speakCurrent(){try{const s=document.getElementById(cur);const u=new SpeechSynthesisUtterance(s.innerText.slice(0,900));u.lang="vi-VN";u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){toast("Trình duyệt chưa hỗ trợ đọc tiếng Việt")}}
+let present=false;function togglePresent(){present=!present;document.querySelector(".side").style.display=present?"none":"";toast(present?"Chế độ trình chiếu: dùng nút Tiếp theo / phím → để chuyển phần":"Đã tắt chế độ trình chiếu")}
+document.addEventListener("keydown",e=>{if(!present)return;const i=SECTIONS.findIndex(s=>s[0]===cur);if(e.key==="ArrowRight"&&i<SECTIONS.length-1)go(SECTIONS[i+1][0]);if(e.key==="ArrowLeft"&&i>0)go(SECTIONS[i-1][0])});
+
+/* POLL */
+const POLL=[["🔍 Lệnh Find được dùng khi muốn tìm kiếm một từ hoặc cụm từ trong văn bản", 1], ["🔁 Replace All thay thế lần lượt từng từ một và mỗi lần đều phải bấm nút", 0], ["👀 Tìm từ bằng mắt trong văn bản dài cũng nhanh và chắc chắn không bỏ sót", 0], ["🧭 Thứ tự tìm kiếm đúng: thẻ Home → nhóm Editing → lệnh Find → gõ từ cần tìm rồi nhấn Enter", 1], ["📝 Ô Find what là nơi gõ từ, cụm từ thay thế mới", 0], ["⏭️ Tìm được một từ mà không muốn thay thế, em bấm Find Next để bỏ qua và tìm tiếp", 1], ["🎯 Công cụ tìm kiếm và thay thế giúp thực hiện theo yêu cầu một cách nhanh chóng và chính xác", 1], ["📖 Sau khi thay thế xong, em nên đọc lại văn bản để kiểm tra kết quả", 1]];;;;;;;;;;;;
+let pollSel=new Set(),pollVotes={};
+const pollEl=document.getElementById("poll");
+POLL.forEach(([name],i)=>{const d=document.createElement("div");d.style.margin="10px 0";d.innerHTML=`<button class="pick" id="poll-${i}" onclick="pollPick(${i})">${name}</button><div class="pollbar" style="margin-top:5px"><i id="pb-${i}" style="width:0%"></i></div>`;pollEl.appendChild(d)});
+function pollPick(i){pollSel.has(i)?pollSel.delete(i):pollSel.add(i);document.getElementById("poll-"+i).classList.toggle("sel",pollSel.has(i))}
+function pollAnswer(){let right=0;POLL.forEach(([n,ans],i)=>{const voted=pollSel.has(i);const pct=voted?100:15;document.getElementById("pb-"+i).style.width=pct+"%";const el=document.getElementById("poll-"+i);el.style.borderColor=(voted===!!ans)?"var(--ok)":"var(--bad)";if(voted===!!ans)right++});
+document.getElementById("pollResult").textContent=`Em đúng ${right}/${POLL.length} ý! `;document.getElementById("pollNote").textContent="Đáp án: Các ý 1, 4, 6, 7, 8 là đúng. Các ý sai: Replace All thay thế TOÀN BỘ các từ tìm được trong một lần bấm (thay từng từ mới cần bấm Replace nhiều lần); tìm bằng mắt trong văn bản dài chậm và dễ bỏ sót; ô Find what là nơi gõ từ CẦN TÌM, còn từ thay thế gõ ở ô Replace with.";if(right>=7){playCorrect();if(right===POLL.length)confettiBurst();toast("Rất tốt! Em nắm công cụ rất chắc 🎉")}else{playWrong()}}
+
+/* IO SIM — PHÒNG MÔ PHỎNG VÀO — RA */
+/* OS SIM — PHÒNG MÔ PHỎNG ĐIỀU HÀNH MÁY TÍNH */
+const IO_DEVICES=[["🔎", "Ô Find what", "🪟 Hộp thoại Find and Replace", "⌨️ Nơi gõ từ, cụm từ CẦN TÌM", "Ô Find what (Tìm gì) là nơi em gõ từ hoặc cụm từ cần tìm kiếm trong văn bản — ví dụ gõ “dưa hấu”. Gõ đúng chính tả và đúng dấu thì công cụ mới tìm được đầy đủ các từ cần thay."], ["🔁", "Ô Replace with", "🪟 Hộp thoại Find and Replace", "⌨️ Nơi gõ từ, cụm từ THAY THẾ", "Ô Replace with (Thay thế bằng) là nơi em gõ từ hoặc cụm từ mới sẽ thay vào — ví dụ gõ “xoài”. Phân biệt rõ hai ô: Find what là từ cũ cần tìm, Replace with là từ mới thay vào; gõ nhầm hai ô cho nhau là văn bản sẽ bị thay ngược!"], ["⏭️", "Nút Find Next và nút Replace", "🪟 Hộp thoại Find and Replace", "👆 Tìm tiếp / Thay thế từ vừa tìm được", "Find Next: tìm từ tiếp theo trong văn bản (cũng dùng để BỎ QUA một từ tìm được mà em không muốn thay — SBT Câu 13.9). Replace: thay thế chính từ vừa tìm được hiện tại bằng từ trong ô Replace with, rồi tự tìm từ tiếp theo."], ["💥", "Nút Replace All và nút Cancel", "🪟 Hộp thoại Find and Replace", "💥 Thay toàn bộ / Đóng hộp thoại", "Replace All: thay thế TOÀN BỘ các từ tìm được trong văn bản chỉ bằng một lần nháy chuột — dùng khi chắc chắn mọi từ tìm được đều cần thay (SBT Câu 13.7). Cancel: kết thúc, đóng hộp thoại Find and Replace."]];;;;;;;;;;;;
+let ioCur=-1;
+const ioGrid=document.getElementById("ioGrid");
+IO_DEVICES.forEach(([ic,t,d],i)=>{const b=document.createElement("button");b.className="btn";b.style.whiteSpace="normal";b.innerHTML=ic+" "+t+"<br><small>"+"👉 Chạm để xem công dụng của thành phần"+"</small>";b.onclick=()=>ioPick(i);ioGrid.appendChild(b)});
+function ioPick(i){ioCur=i;const [ic,tt,d,result,explain]=IO_DEVICES[i];
+ document.getElementById("ioFrom").textContent=ic+" "+tt;document.getElementById("ioArr1").textContent="— 🪟 TRONG HỘP THOẠI →";document.getElementById("ioMid").textContent=result;document.getElementById("ioArr2").textContent="→";document.getElementById("ioTo").textContent="✔ Em đã hiểu công dụng này";
+ document.getElementById("ioTitle").textContent=ic+" "+tt;
+ document.getElementById("ioDesc").textContent=explain+".";
+ document.getElementById("ioLog").innerHTML=`<div><span class="in">👉 Bước 1 — Thành phần:</span> ${tt}</div><div><span class="pr">🪟 Bước 2 — Công dụng:</span> ${result}</div><div><span class="out">💡 Bước 3 — Giải thích:</span> ${explain}</div>`;
+ playClick()}
+
+/* DEVICES */
+const DEVICES=[["🔍", "Lệnh Find", "Lệnh Find được sử dụng khi muốn tìm kiếm một từ hoặc cụm từ trong văn bản (SBT Câu 13.1 — đáp án B). Lệnh Find nằm trong nhóm lệnh Editing của thẻ Home."], ["🔁", "Lệnh Replace", "Để thay thế một từ hoặc cụm từ tìm kiếm được bằng một từ hoặc cụm từ khác, em dùng lệnh Replace — lệnh này mở hộp thoại Find and Replace (SBT Câu 13.2)."], ["🧭", "Ba bước tìm kiếm", "(1) Nháy chuột chọn thẻ Home; (2) Trong nhóm lệnh Editing chọn Find; (3) Gõ từ hoặc cụm từ cần tìm kiếm rồi nhấn phím Enter. Kết quả tìm được sẽ được đánh dấu trong văn bản (SBT Câu 13.3: thứ tự c – b – a)."], ["🪟", "Hộp thoại Find and Replace", "Gồm ô Find what (gõ từ cần tìm), ô Replace with (gõ từ thay thế) và các nút lệnh: Find Next, Replace, Replace All, Cancel (SBT Câu 13.4)."], ["⏭️", "Bỏ qua một từ tìm được", "Khi sử dụng hộp thoại Find and Replace, nếu tìm được một từ mà chúng ta không muốn thay thế, chúng ta có thể bỏ qua từ đó bằng cách chọn lệnh Find Next để tìm từ tiếp theo (SBT Câu 13.9)."], ["💥", "Thay thế tất cả", "Bạn An muốn thay thế tất cả các từ “món ngon” bằng từ “đặc sản” trong bài viết về cốm Làng Vòng — lệnh cần dùng trong hộp thoại Find and Replace là Replace All (SBT Câu 13.7)."], ["🎯", "Chỉ thay một số từ", "Sau khi đọc lại, An nhận thấy không nên thay thế tất cả các từ “đặc sản” thành “món ngon” mà chỉ thay một số từ: khi đó An dùng Find Next để tìm từng từ và nhấn Replace ở những từ muốn thay, bỏ qua những từ còn lại (SBT Câu 13.10)."], ["✅", "Nhanh chóng và chính xác", "Công cụ Tìm kiếm và Thay thế giúp chúng ta tìm kiếm hoặc thay thế các từ hoặc cụm từ theo yêu cầu một cách nhanh chóng và chính xác (SBT Câu 13.6 — điền: Thay thế / yêu cầu)."]];;;;;;;;;;;;
+const dg=document.getElementById("deviceGrid");
+DEVICES.forEach(([ic,t,d])=>{const c=document.createElement("div");c.className="card";c.innerHTML=`<div style="font-size:30px">${ic}</div><h4>${t}</h4><p class="devd" style="display:none">${d}</p><button class="btn small">Khám phá</button>`;c.querySelector("button").onclick=e=>{const p=c.querySelector(".devd");const open=p.style.display!=="none";p.style.display=open?"none":"block";e.target.textContent=open?"Khám phá":"Thu gọn"};dg.appendChild(c)});
+
+/* MATCH GAME */
+const MATCH=[["⏭️ 1) Find Next", "Tìm từ tiếp theo trong văn bản"], ["🔁 2) Replace", "Thay thế từ vừa tìm được"], ["💥 3) Replace All", "Thay thế toàn bộ các từ tìm được"], ["✖️ 4) Cancel", "Đóng hộp thoại, kết thúc thay thế"]];;;;;;;;;;;;
+let mSel=null,mScore=0;const order=[2,0,3,1];
+const ml=document.getElementById("matchL"),mr=document.getElementById("matchR");
+MATCH.forEach(([t],i)=>{const b=document.createElement("button");b.className="pick";b.style.margin="6px 0";b.textContent=t;b.onclick=()=>{document.querySelectorAll("#matchL .pick").forEach(x=>x.classList.remove("sel"));b.classList.add("sel");mSel=i};ml.appendChild(b)});
+order.forEach(i=>{const b=document.createElement("button");b.className="pick";b.style.margin="6px 0";b.textContent=MATCH[i][1];b.onclick=()=>{if(mSel===null){toast("Hãy chọn một loại tệp ở cột trái trước!");return}
+if(mSel===i){playCorrect();b.classList.add("ok");document.querySelectorAll("#matchL .pick")[mSel].classList.add("ok");mScore++;if(mScore===4)setTimeout(()=>confettiBurst(),200);document.getElementById("matchScore").textContent=mScore;document.getElementById("matchMsg").textContent=mScore===4?" — Hoàn thành! Em đã nắm chắc phần này 🎉":" — Đúng rồi!";mSel=null}
+else{playWrong();b.classList.add("wrong");setTimeout(()=>b.classList.remove("wrong"),350);document.getElementById("matchMsg").textContent=" — Chưa đúng, thử lại nhé!";document.getElementById("matchMsg").style.color="var(--bad)";setTimeout(()=>document.getElementById("matchMsg").style.color="var(--acc2)",900)}};mr.appendChild(b)});
+
+/* WORLD OFF */
+const WORLD=[["⏱️ Thời gian", "Dùng công cụ: Thay một từ xuất hiện hàng chục lần trong văn bản dài chỉ mất vài giây với Replace All.", "Sửa tay: Đọc lại từng dòng để tìm và sửa — một bài dài có thể mất hàng chục phút."], ["🎯 Độ chính xác", "Dùng công cụ: Mọi từ trùng khớp đều được tìm thấy và thay đúng như yêu cầu, thống nhất trong toàn văn bản.", "Sửa tay: Dễ thay sót một vài chỗ, hoặc thay nhầm từ có cách viết gần giống nhau."], ["👀 Bỏ sót", "Dùng công cụ: Không bỏ sót từ nào — máy tính kiểm tra toàn bộ văn bản từ đầu đến cuối.", "Sửa tay: Đọc bằng mắt rất dễ hoa mắt, bỏ qua những từ nằm ở giữa đoạn dài."], ["😌 Công sức", "Dùng công cụ: Chỉ cần gõ đúng hai ô Find what và Replace with, phần việc nặng nhọc để máy tính làm.", "Sửa tay: Vừa mệt vừa chán, càng sửa nhiều càng dễ sinh thêm lỗi chính tả mới."]];;;;;;;;;;;;
+let worldOff=false;const wg=document.getElementById("worldGrid");
+function drawWorld(){wg.innerHTML="";WORLD.forEach(([t,g,b])=>{const c=document.createElement("div");c.className="card";c.style.opacity=worldOff?.75:1;c.innerHTML=`<h4>${worldOff?"⛔":"✅"} ${t}</h4><p>${worldOff?b:g}</p>`;wg.appendChild(c)})}
+drawWorld();
+function toggleWorld(){worldOff=!worldOff;document.getElementById("killBtn").textContent=worldOff?"↩️ Quay lại dùng công cụ":"✍️ Thử sửa tay từng từ";document.getElementById("worldTxt").textContent=worldOff?"Đang sửa tay: đọc từng dòng, thay từng chữ — chậm, mệt và rất dễ bỏ sót.":"Đang dùng công cụ: tìm và thay toàn bộ trong vài giây — nhanh, chính xác, không sót.";drawWorld()}
+
+/* FLIP CARDS */
+const FLIPS=[["⏭️", "Find Next", "Chạm để lật thẻ", "Tìm từ tiếp theo khớp với nội dung trong ô Find what. Cũng là nút dùng để bỏ qua một từ vừa tìm được mà em không muốn thay thế, chuyển sang tìm từ tiếp theo."], ["🔁", "Replace", "Chạm để lật thẻ", "Thay thế chính từ vừa tìm được (đang được đánh dấu) bằng từ trong ô Replace with, sau đó tự động tìm từ tiếp theo. Dùng khi muốn thay chọn lọc từng từ."], ["💥", "Replace All", "Chạm để lật thẻ", "Thay thế toàn bộ các từ tìm được trong văn bản bằng từ trong ô Replace with, chỉ bằng một lần nháy chuột. Dùng khi chắc chắn mọi từ tìm được đều cần thay."], ["✖️", "Cancel", "Chạm để lật thẻ", "Kết thúc việc tìm kiếm và thay thế, đóng hộp thoại Find and Replace và quay lại soạn thảo văn bản bình thường."]];;;;;;;;;;;;
+const fg=document.getElementById("flipGrid");
+FLIPS.forEach(([ic,t,s,b])=>{const d=document.createElement("div");d.className="flip";d.innerHTML=`<div class="flip-in"><div class="face f"><div class="big">${ic}</div><h4>${t}</h4><small>${s}</small></div><div class="face b"><p>${b}</p></div></div>`;d.onclick=()=>d.classList.toggle("flipped");fg.appendChild(d)});
+
+/* CLICK GAME */
+let cg={run:false,n:0,timer:null};
+function clickGame(){if(cg.run){cg.n++;document.getElementById("humanCount").textContent=cg.n;return}
+cg.run=true;cg.n=1;document.getElementById("humanCount").textContent=1;document.getElementById("clickBtn").textContent="BẤM! BẤM! BẤM!";let start=Date.now();
+cg.timer=setInterval(()=>{const el=(Date.now()-start)/1000;document.getElementById("pcCount").textContent=Math.floor(el*3000000000).toLocaleString("vi-VN");if(el>=5){clearInterval(cg.timer);cg.run=false;document.getElementById("clickBtn").textContent="Chơi lại (5 giây)";document.getElementById("clickMsg").textContent=`Kết quả: Em bấm được ${cg.n} lần, còn máy tính thực hiện khoảng 15 tỉ phép tính trong cùng 5 giây. Đó là sức mạnh tính toán của máy tính!`}},50)}
+
+/* DOMAINS */
+const DOMAINS={"🔍 Tìm kiếm (Find)": "Thứ tự đúng (SBT Câu 13.3): c) Nháy chuột chọn thẻ Home → b) Trong nhóm lệnh Editing chọn Find → a) Gõ từ hoặc cụm từ cần tìm kiếm rồi nhấn phím Enter. Sau khi tìm, các từ tìm thấy được đánh dấu trong văn bản; nháy vào từng kết quả trong hộp thoại Navigation để định vị con trỏ đến đúng vị trí đó.", "🔁 Thay thế (Replace)": "Thứ tự đúng (SBT Câu 13.5): mở lệnh Replace trong nhóm Editing của thẻ Home → gõ từ cần tìm vào ô Find what → gõ từ thay thế vào ô Replace with → nháy Find Next để tìm và Replace để thay thế từng từ, hoặc Replace All để thay thế toàn bộ → nháy Cancel để kết thúc.", "⚠️ Thay toàn bộ hay thay chọn lọc?": "Dùng Replace All khi mọi từ tìm được đều phải thay (ví dụ sửa một lỗi chính tả lặp lại trong toàn bài). Dùng Find Next + Replace khi chỉ một số từ cần thay: tìm từng từ, đọc ngữ cảnh xung quanh, muốn thay mới bấm Replace, không muốn thay thì bấm Find Next bỏ qua (SBT Câu 13.9 và 13.10).", "📒 Áp dụng cho sổ lưu niệm": "Cuốn sổ lưu niệm dài nhiều trang là nơi công cụ này phát huy tác dụng nhất: sửa một tên riêng bị gõ sai ở mọi trang; thống nhất cách gọi (ví dụ đổi “cô giáo chủ nhiệm” thành tên cụ thể); cập nhật một thông tin thay đổi (ngày tổ chức sự kiện) ở mọi chỗ chỉ bằng một lần Replace All."};;;;;;;;;;;;
+const dt=document.getElementById("domainTabs"),dp=document.getElementById("domainPane");
+Object.keys(DOMAINS).forEach((k,i)=>{const b=document.createElement("button");b.className="tab"+(i===0?" on":"");b.textContent=k;b.onclick=()=>{document.querySelectorAll("#domainTabs .tab").forEach(x=>x.classList.remove("on"));b.classList.add("on");dp.innerHTML=`<div class="card"><h4>${k}</h4><p>${DOMAINS[k]}</p></div>`};dt.appendChild(b);if(i===0)dp.innerHTML=`<div class="card"><h4>${k}</h4><p>${DOMAINS[k]}</p></div>`});
+
+/* SORT GAME */
+const SORT=[["Replace All thay thế toàn bộ các từ tìm được trong văn bản.", 1], ["Muốn thay thế tất cả các từ “món ngon” bằng “đặc sản”, em dùng lệnh Find Next.", 0], ["Tìm được một từ mà không muốn thay thế, em bấm Find Next để bỏ qua.", 1], ["Ô Replace with là nơi gõ từ, cụm từ cần tìm kiếm.", 0], ["Tìm kiếm thủ công bằng mắt luôn nhanh và chính xác hơn dùng công cụ.", 0], ["Công cụ Tìm kiếm và Thay thế giúp tìm và thay từ theo yêu cầu một cách nhanh chóng và chính xác.", 1]];;;;;;;;;;;;
+let sIdx=-1,sScore=0,sAnswered=false;
+function sortNext(reset){if(reset){sScore=0;sIdx=-1;document.getElementById("sortScore").textContent=0}
+sIdx++;sAnswered=false;
+if(sIdx>=SORT.length){document.getElementById("sortCard").textContent=`Hoàn thành! Em đạt ${sScore}/6 điểm.`;if(sScore===6)setTimeout(()=>confettiBurst(),200);document.getElementById("sortMsg").textContent=sScore===6?"Xuất sắc! Em nắm chắc các phát biểu về máy tính và xử lí thông tin.":sScore>=4?"Khá tốt! Hãy nhớ: máy tính nhanh, chính xác, lưu trữ lớn, bền bỉ — nhưng không suy nghĩ sáng tạo và không thay thế được con người ở mọi lĩnh vực.":"Hãy xem lại hai thẻ kiến thức phía trên rồi chơi lại nhé!";return}
+document.getElementById("sortCard").textContent="“"+SORT[sIdx][0]+"”";document.getElementById("sortMsg").textContent=`Câu ${sIdx+1}/6`}
+function sortPick(pos){if(sIdx<0||sIdx>=SORT.length||sAnswered){if(sIdx<0)toast("Hãy bấm Bắt đầu trước!");return}
+sAnswered=true;const ans=!!SORT[sIdx][1];
+if(pos===ans){playCorrect();sScore++;document.getElementById("sortScore").textContent=sScore;document.getElementById("sortMsg").textContent="Đúng rồi! 🎉"}else{playWrong();document.getElementById("sortMsg").textContent="Chưa đúng — tình huống này thuộc nhóm còn lại."}
+setTimeout(()=>sortNext(false),1100)}
+function saveReflect(){const a=document.getElementById("myApp").value.trim(),u=document.getElementById("myUse").value.trim();if(!a||!u){toast("Em hãy điền đủ cả hai ô nhé!");return}localStorage.setItem("tin6b13_reflect",JSON.stringify({a,u}));document.getElementById("reflectMsg").textContent="Đã lưu ✔";toast("Đã lưu bài tự liên hệ ✔")}
+
+/* WATCH */
+const WATCH=[["🍦 1. Vận dụng (SBT Câu 13.7): Thay tất cả “món ngon” thành “đặc sản”", "Bạn An viết bài giới thiệu đặc sản cốm Làng Vòng cho các bạn ở Tuyên Quang và muốn sửa lại văn bản: thay thế tất cả các từ “món ngon” bằng từ “đặc sản”. Cách làm: Home → Editing → Replace; ô Find what gõ “món ngon”; ô Replace with gõ “đặc sản”; nháy nút Replace All trong hộp thoại Find and Replace. Toàn bộ các từ “món ngon” trong bài sẽ thành “đặc sản” trong một lần thao tác."], ["🎯 2. Vận dụng (SBT Câu 13.9, 13.10): Chỉ thay một số từ", "Sau khi đọc lại, An nhận thấy không nên thay thế tất cả các từ “đặc sản” thành “món ngon”, mà chỉ thay một số từ. Cách làm: dùng Find Next để tìm lần lượt từng từ “đặc sản”; đọc ngữ cảnh; từ nào muốn thay thì nháy Replace; từ nào không muốn thay thì nháy Find Next để bỏ qua và tìm tiếp. Tuyệt đối không dùng Replace All trong tình huống này."], ["📒 3. Vận dụng: Sửa một lỗi lặp lại trong sổ lưu niệm", "Cuốn sổ lưu niệm của lớp dài hàng chục trang và tên của cô chủ nhiệm bị gõ sai ở nhiều chỗ. Cách làm: mở tệp sổ lưu niệm, dùng Replace với ô Find what là tên gõ sai, ô Replace with là tên đúng, nháy Replace All. Chỉ vài giây, mọi chỗ sai đều được sửa thống nhất — điều mà sửa tay rất dễ bỏ sót. Đừng quên đọc lại vài chỗ sau khi thay để chắc chắn."], ["🔍 4. Vận dụng: Tìm nhanh một thông tin trong văn bản dài", "Cần tìm xem trong sổ lưu niệm, hoạt động “dã ngoại” được nhắc đến ở những trang nào? Mở lệnh Find (Home → Editing → Find), gõ “dã ngoại”, nhấn Enter — mọi từ “dã ngoại” được đánh dấu; nháy vào từng kết quả trong hộp thoại Navigation để nhảy đến đúng vị trí và đọc ngữ cảnh xung quanh."]];;;;;;;;;;;;
+function watchInfo(i){document.getElementById("watchTitle").textContent=WATCH[i][0];document.getElementById("watchTxt").textContent=WATCH[i][1]}
+
+/* QUIZ */
+const QUIZ=[["Lệnh Find được sử dụng khi nào? (SBT Câu 13.1)", ["Khi muốn định dạng chữ in nghiêng cho một đoạn văn bản", "Khi muốn tìm kiếm một từ hoặc cụm từ trong văn bản", "Khi muốn thay thế một từ hoặc cụm từ trong văn bản", "Khi cần thay đổi phông chữ của văn bản"], 1, "Khi muốn tìm kiếm một từ hoặc cụm từ trong văn bản, ta dùng lệnh Find. (SBT Câu 13.1 — đáp án B)"], ["Điền từ thích hợp: “Công cụ Tìm kiếm và … giúp chúng ta tìm kiếm hoặc thay thế các từ hoặc cụm từ theo yêu cầu một cách nhanh chóng và chính xác.” (SBT Câu 13.6)", ["Thay thế", "Xoá", "Định dạng", "In ấn"], 0, "Công cụ Tìm kiếm và Thay thế giúp tìm kiếm hoặc thay thế các từ, cụm từ theo yêu cầu một cách nhanh chóng và chính xác. (SBT Câu 13.6)"], ["Sắp xếp các bước thực hiện việc tìm kiếm một từ hoặc cụm từ trong văn bản theo thứ tự đúng: (SBT Câu 13.3)", ["Gõ từ cần tìm, nhấn Enter → Chọn thẻ Home → Chọn Find", "Chọn thẻ Home → Trong nhóm Editing chọn Find → Gõ từ cần tìm rồi nhấn Enter", "Trong nhóm Editing chọn Find → Chọn thẻ Home → Gõ từ cần tìm", "Gõ từ cần tìm → Chọn Find → Chọn thẻ Home"], 1, "Thứ tự đúng: c) Nháy chuột chọn thẻ Home → b) Trong nhóm lệnh Editing chọn Find → a) Gõ từ hoặc cụm từ cần tìm kiếm rồi nhấn phím Enter. (SBT Câu 13.3)"], ["Bạn An muốn thay thế tất cả các từ “món ngon” bằng từ “đặc sản” trong bài viết. Bạn sẽ sử dụng lệnh nào trong hộp thoại “Find and Replace”? (SBT Câu 13.7)", ["Replace", "Find Next", "Replace All", "Cancel"], 2, "Muốn thay thế tất cả các từ tìm được, dùng lệnh Replace All. (SBT Câu 13.7 — đáp án C)"], ["Khi sử dụng hộp thoại “Find and Replace”, nếu tìm được một từ mà chúng ta không muốn thay thế, chúng ta có thể bỏ qua từ đó bằng cách chọn lệnh nào? (SBT Câu 13.9)", ["Replace All", "Find Next", "Cancel", "Replace"], 1, "Bấm Find Next để bỏ qua từ hiện tại và tìm từ tiếp theo. (SBT Câu 13.9)"], ["Trong hộp thoại Find and Replace, ô Find what dùng để:", ["Gõ từ, cụm từ thay thế mới", "Gõ từ, cụm từ cần tìm kiếm", "Hiển thị số từ đã thay thế", "Đặt phông chữ cho văn bản"], 1, "Find what = “Tìm gì”: nơi gõ từ cần tìm. Từ thay thế gõ ở ô Replace with."], ["Các lệnh Find và Replace nằm ở đâu?", ["Thẻ Insert, nhóm Table", "Thẻ Home, nhóm lệnh Editing", "Thẻ Page Layout, nhóm Page Setup", "Thẻ View, nhóm Zoom"], 1, "Find và Replace đều nằm trong nhóm lệnh Editing của thẻ Home."], ["Thứ tự đúng của thao tác thay thế toàn bộ một cụm từ là:", ["Replace All → Gõ Find what → Gõ Replace with → Mở Replace", "Mở lệnh Replace → Gõ từ cần tìm vào Find what → Gõ từ thay thế vào Replace with → Nháy Replace All", "Gõ Replace with → Mở Replace → Replace All → Gõ Find what", "Mở Find → Gõ từ cần tìm → Nháy Replace All"], 1, "Đúng trình tự: mở Replace → nhập ô Find what → nhập ô Replace with → Replace All để thay toàn bộ (hoặc Replace để thay từng từ)."], ["Vì sao nên dùng công cụ Tìm kiếm và Thay thế thay vì sửa tay từng từ?", ["Vì công cụ giúp thực hiện nhanh chóng, chính xác và không bỏ sót từ nào", "Vì sửa tay thì phần mềm sẽ bị hỏng", "Vì công cụ tự viết thêm nội dung cho văn bản", "Vì chỉ công cụ mới gõ được chữ có dấu"], 0, "Công cụ kiểm tra toàn bộ văn bản nên nhanh chóng, chính xác, tiết kiệm thời gian và không bỏ sót."], ["Sau khi đọc lại, bạn An không muốn thay thế tất cả các từ “đặc sản” thành “món ngon” mà chỉ thay một số từ. An nên làm thế nào? (SBT Câu 13.10)", ["Nháy Replace All rồi sửa lại những chỗ không muốn thay", "Dùng Find Next để tìm từng từ, nháy Replace ở những từ muốn thay và Find Next để bỏ qua những từ còn lại", "Xoá cả văn bản và gõ lại từ đầu", "Nháy Cancel và không thay từ nào nữa"], 1, "Thay chọn lọc: Find Next tìm từng từ, Replace chỉ ở những từ muốn thay, Find Next để bỏ qua các từ giữ nguyên. (SBT Câu 13.10)"]];;;;;;;;;;;;
+let qAns={},qScore=0;const qb=document.getElementById("quizBox");
+QUIZ.forEach(([q,opts,ans],qi)=>{const d=document.createElement("div");d.className="q";d.innerHTML=`<h4>Câu ${qi+1}. ${q}</h4>`+opts.map((o,oi)=>`<button class="opt" onclick="answer(${qi},${oi},this)">${String.fromCharCode(65+oi)}. ${o}</button>`).join("")+`<div class="expl" id="expl-${qi}"></div>`;qb.appendChild(d)});
+function answer(qi,oi,btn){if(qAns[qi]!==undefined)return;qAns[qi]=oi;const right=QUIZ[qi][2];const box=btn.parentElement;box.querySelectorAll(".opt").forEach((b,bi)=>{if(bi===right)b.classList.add("right");else if(bi===oi)b.classList.add("wrong");b.style.pointerEvents="none"});
+(oi===right?playCorrect():playWrong());const ex=document.getElementById("expl-"+qi);ex.textContent=(oi===right?"✅ Đúng! ":"❌ Chưa đúng. ")+QUIZ[qi][3];ex.classList.add("show");
+qScore=Object.keys(qAns).filter(k=>qAns[k]===QUIZ[k][2]).length;document.getElementById("quizScore").textContent=qScore}
+function finishQuiz(){const n=Object.keys(qAns).length;if(n<10){toast(`Em mới trả lời ${n}/10 câu — hãy làm đủ 10 câu nhé!`);return}
+done("quiz");const name=document.getElementById("stuName").value.trim()||"Học sinh lớp 6";
+if(qScore>=8){const c=document.getElementById("cert");c.style.display="block";document.getElementById("certTxt").innerHTML=`Chúc mừng <b>${name}</b> đạt <b>${qScore}/10 điểm</b> trong bài kiểm tra Bài 13 — Tìm kiếm và thay thế!`;confettiBurst();c.scrollIntoView({behavior:"smooth"})}else{toast(`Em đạt ${qScore}/10 điểm. Hãy ôn lại các phần chưa chắc rồi làm lại để đạt từ 8 điểm và nhận chứng nhận nhé!`)}}
+
+/* ===== V2 JS: ÂM THANH + NHẠC NỀN + TOÀN MÀN HÌNH + TRÌNH CHIẾU + GEMINI TTS ===== */
+let AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(f,t0,dur,type="sine",vol=.18,slideTo=null){const c=ac();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime+t0);if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,c.currentTime+t0+dur);g.gain.setValueAtTime(0.0001,c.currentTime+t0);g.gain.exponentialRampToValueAtTime(vol,c.currentTime+t0+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+t0+dur);o.connect(g);g.connect(c.destination);o.start(c.currentTime+t0);o.stop(c.currentTime+t0+dur+.05)}
+function sfxOn(){const e=document.getElementById("sfxOn");return !e||e.checked}
+function playCorrect(){if(!sfxOn())return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*.09,.28,"sine",.16))}
+function playWrong(){if(!sfxOn())return;tone(196,0,.32,"sawtooth",.07,130);tone(147,.05,.3,"square",.05,110)}
+function playClick(){if(!sfxOn())return;tone(880,0,.06,"triangle",.05)}
+document.addEventListener("click",e=>{if(e.target.closest("button")&&!e.target.closest("#musicPanel"))playClick()});
+
+/* --- Nhạc nền tổng hợp (không bản quyền) --- */
+const TRACKS=[
+{name:"1. Bình minh học tập",chords:[[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66],[164.81,196,261.63]],dur:5.2,wave:"triangle",arp:"up",filter:900},
+{name:"2. Gió nhẹ qua trang sách",chords:[[196,246.94,293.66],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,392]],dur:5.6,wave:"sine",arp:"down",filter:800},
+{name:"3. Piano mưa rơi",chords:[[261.63,329.63,392],[233.08,293.66,349.23],[196,246.94,293.66],[220,261.63,329.63]],dur:4.6,wave:"triangle",arp:"updown",filter:1200},
+{name:"4. Sóng biển thư giãn",chords:[[164.81,196,246.94],[146.83,220,261.63],[130.81,196,261.63],[174.61,220,293.66]],dur:7,wave:"sine",arp:"none",filter:650},
+{name:"5. Rừng xanh yên tĩnh",chords:[[146.83,220,293.66],[164.81,196,246.94],[196,246.94,293.66],[220,261.63,329.63]],dur:6.4,wave:"sine",arp:"up",filter:750},
+{name:"6. Hoàng hôn ấm áp",chords:[[174.61,220,261.63],[130.81,196,261.63],[146.83,220,293.66],[164.81,220,261.63]],dur:5.8,wave:"triangle",arp:"down",filter:850},
+{name:"7. Không gian tập trung",chords:[[110,220,261.63],[130.81,196,329.63],[98,196,246.94],[146.83,220,293.66]],dur:6.8,wave:"sine",arp:"none",filter:600},
+{name:"8. Giai điệu vui tươi",chords:[[261.63,329.63,392],[196,246.94,392],[220,261.63,349.23],[246.94,293.66,392]],dur:4.2,wave:"triangle",arp:"up",filter:1300},
+{name:"9. Đêm sao yên bình",chords:[[220,261.63,329.63],[196,293.66,392],[174.61,261.63,349.23],[196,246.94,329.63]],dur:6.2,wave:"sine",arp:"updown",filter:700},
+{name:"10. Năng lượng buổi sáng",chords:[[196,246.94,293.66],[261.63,329.63,392],[220,261.63,329.63],[174.61,220,349.23]],dur:4.4,wave:"triangle",arp:"up",filter:1100}];
+const MUSIC={playing:false,timer:null,arpTimers:[],nodes:[],idx:0,gain:null,track:0,random:true,source:"synth",fileAudio:null,fileName:"",prog:0};
+function curTrack(){return TRACKS[MUSIC.track]}
+function musicVolVal(){return (document.getElementById("musicVol").value||20)/100}
+function musicStatusTrack(){const st=document.getElementById("musicStatus");if(st)st.textContent=MUSIC.playing?("Đang phát: "+(MUSIC.source==="file"?("🎵 Nhạc của bạn — "+MUSIC.fileName):(curTrack().name+(MUSIC.random?" • chế độ ngẫu nhiên":"")))):"Đang tắt."}
+function pickRandomTrack(){let n=MUSIC.track;while(n===MUSIC.track)n=Math.floor(Math.random()*TRACKS.length);MUSIC.track=n;MUSIC.idx=0;MUSIC.prog=0}
+function randomTrackNow(){MUSIC.random=true;const sel=document.getElementById("musicTrack");if(sel&&MUSIC.source==="synth")sel.value="random";pickRandomTrack();if(MUSIC.playing&&MUSIC.source==="synth"){clearTimeout(MUSIC.timer);scheduleChord()}musicStatusTrack();toast("🎲 Đang phát: "+curTrack().name)}
+function scheduleChord(){const c=ac();if(!c||!MUSIC.playing||MUSIC.source!=="synth")return;const tr=curTrack();const chord=tr.chords[MUSIC.idx%tr.chords.length];MUSIC.idx++;
+ if(MUSIC.idx%tr.chords.length===0){MUSIC.prog++;if(MUSIC.random&&MUSIC.prog>=1){pickRandomTrack();return scheduleChord()}}
+ const dur=tr.dur;const now=c.currentTime;
+ chord.forEach(f=>{const o=c.createOscillator(),g=c.createGain(),fl=c.createBiquadFilter();o.type=tr.wave;o.frequency.value=f;fl.type="lowpass";fl.frequency.value=tr.filter;g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.05,now+1.1);g.gain.setValueAtTime(.05,now+dur-1.2);g.gain.exponentialRampToValueAtTime(.0001,now+dur);o.connect(fl);fl.connect(g);g.connect(MUSIC.gain);o.start(now);o.stop(now+dur+.1);MUSIC.nodes.push(o)});
+ const ARP={up:[0,1,2,1],down:[2,1,0,1],updown:[0,1,2,1]};const pat=ARP[tr.arp];
+ if(pat){pat.forEach((n,i)=>{const t=setTimeout(()=>{if(!MUSIC.playing||MUSIC.source!=="synth")return;const cc=ac();if(!cc)return;const o=cc.createOscillator(),g=cc.createGain();o.type="sine";o.frequency.value=chord[n]*2;g.gain.setValueAtTime(.045,cc.currentTime);g.gain.exponentialRampToValueAtTime(.0001,cc.currentTime+.7);o.connect(g);g.connect(MUSIC.gain);o.start();o.stop(cc.currentTime+.75);MUSIC.nodes.push(o)},i*950);MUSIC.arpTimers.push(t)})}
+ MUSIC.timer=setTimeout(scheduleChord,dur*1000-250)}
+function stopSynth(){clearTimeout(MUSIC.timer);MUSIC.arpTimers.forEach(clearTimeout);MUSIC.arpTimers=[];MUSIC.nodes.forEach(o=>{try{o.stop()}catch(e){}});MUSIC.nodes=[];if(MUSIC.fileAudio){try{MUSIC.fileAudio.pause()}catch(e){}}}
+function startMusic(){const c=ac();if(!c){toast("Trình duyệt không hỗ trợ WebAudio");return}
+ if(MUSIC.source==="file"&&MUSIC.fileAudio){MUSIC.fileAudio.loop=true;MUSIC.fileAudio.volume=musicVolVal();MUSIC.fileAudio.play().catch(()=>toast("Không phát được file nhạc đã tải"))}
+ else{if(!MUSIC.gain){MUSIC.gain=c.createGain();MUSIC.gain.connect(c.destination)}MUSIC.gain.gain.value=musicVolVal();MUSIC.idx=0;scheduleChord()}
+ MUSIC.playing=true;document.getElementById("musicToggle").textContent="⏸ Tắt nhạc nền";document.getElementById("musicBtn").classList.add("music-on");document.getElementById("musicBtn").textContent="🎵 Nhạc nền: ĐANG BẬT";musicStatusTrack()}
+function stopMusic(){MUSIC.playing=false;stopSynth();document.getElementById("musicToggle").textContent="▶ Bật nhạc nền";document.getElementById("musicBtn").classList.remove("music-on");document.getElementById("musicBtn").textContent="🎵 Nhạc nền";musicStatusTrack()}
+function toggleMusic(){if(MUSIC.playing){stopMusic();return}startMusic();if(MUSIC.playing)toast("Đã bật nhạc nền 🎵")}
+function toggleMusicPanel(){document.getElementById("ttsPanel").classList.remove("show");document.getElementById("musicPanel").classList.toggle("show")}
+document.getElementById("musicVol").addEventListener("input",e=>{document.getElementById("musicVolTxt").textContent=e.target.value+"%";if(MUSIC.gain)MUSIC.gain.gain.value=e.target.value/100;if(MUSIC.fileAudio)MUSIC.fileAudio.volume=e.target.value/100});
+document.getElementById("musicTrack").addEventListener("change",e=>{const v=e.target.value;
+ if(v==="upload"){if(!MUSIC.fileAudio){toast("Hãy bấm 'Tải nhạc của bạn lên' để chọn file nhạc trước");e.target.value=MUSIC.random?"random":String(MUSIC.track);return}MUSIC.source="file"}
+ else if(v==="random"){MUSIC.source="synth";MUSIC.random=true;pickRandomTrack()}
+ else{MUSIC.source="synth";MUSIC.random=false;MUSIC.track=+v;MUSIC.idx=0;MUSIC.prog=0}
+ if(MUSIC.playing){stopSynth();MUSIC.playing=false;startMusic()}musicStatusTrack()});
+document.getElementById("musicUpload").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+ if(MUSIC.fileAudio){try{MUSIC.fileAudio.pause()}catch(err){}}
+ MUSIC.fileAudio=new Audio(URL.createObjectURL(f));MUSIC.fileName=f.name;MUSIC.source="file";
+ const sel=document.getElementById("musicTrack");const opt=sel.querySelector('option[value="upload"]');if(opt){opt.disabled=false;opt.textContent="🎵 Nhạc của bạn: "+f.name}sel.value="upload";
+ if(MUSIC.playing){stopSynth();MUSIC.playing=false;startMusic()}else startMusic();
+ toast("Đã tải lên và phát: "+f.name)});
+
+/* --- Toàn màn hình + Trình chiếu cải tiến --- */
+function toggleFullscreen(){if(document.fullscreenElement){document.exitFullscreen()}else{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>toast("Trình duyệt không cho phép toàn màn hình"))}}
+function updPresentCnt(){const i=SECTIONS.findIndex(s=>s[0]===cur);document.getElementById("presentCnt").textContent=`Phần ${i+1}/${SECTIONS.length} • ${SECTIONS[i][1].replace(/^[^\wÀ-ỹ]+/,"")}`}
+function presentNav(d){const i=SECTIONS.findIndex(s=>s[0]===cur);const n=Math.min(SECTIONS.length-1,Math.max(0,i+d));go(SECTIONS[n][0]);updPresentCnt()}
+function togglePresent(){present=!present;document.body.classList.toggle("present",present);document.getElementById("presentBar").classList.toggle("show",present);if(present){updPresentCnt();toast("Chế độ trình chiếu: bố cục lớn, rõ — dùng ← → hoặc thanh điều khiển bên dưới. Bấm ⛶ để toàn màn hình.")}}
+const _go0=go;go=function(id){_go0(id);if(document.body.classList.contains("present"))updPresentCnt()};
+
+/* --- Gemini TTS --- */
+const TTS_MODELS=["gemini-3.8-flash-tts","gemini-3.8-flash-lite-tts","gemini-2.5-flash-preview-tts","gemini-2.5-pro-preview-tts"];
+let TTS={stop:false,audio:null,paused:false};
+function toggleTtsPanel(){document.getElementById("musicPanel").classList.remove("show");document.getElementById("ttsPanel").classList.toggle("show");const k=localStorage.getItem("tin9b1_gemini_key");if(k)document.getElementById("gemKey").value=k;const poolEl=document.getElementById("gemKeyPool");if(poolEl)poolEl.value=localStorage.getItem("tin9b1_gemini_key_pool")||""}
+function gemKeyVal(){return (document.getElementById("gemKey").value||localStorage.getItem("tin9b1_gemini_key")||"").trim()}
+function saveGemKey(){const k=document.getElementById("gemKey").value.trim();if(!k){toast("Em / thầy cô hãy dán API key vào ô trước đã");return}localStorage.setItem("tin9b1_gemini_key",k);ttsStatus("Đã lưu key trong trình duyệt này ✔ Hãy bấm Kiểm tra kết nối hoặc Đọc toàn bộ bài.");toast("Đã lưu Gemini API key (chỉ lưu trên máy này)")}
+function clearGemKey(){localStorage.removeItem("tin9b1_gemini_key");document.getElementById("gemKey").value="";ttsStatus("Đã xoá key khỏi trình duyệt.")}
+function ttsStatus(t){document.getElementById("ttsStatus").textContent=t}
+async function testGemKey(){const k=gemKeyVal();if(!k){ttsStatus("Chưa có key — hãy dán key rồi lưu lại.");return}ttsStatus("Đang kiểm tra kết nối tới Google AI…");
+ try{const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models",{headers:{"x-goog-api-key":k}});if(r.ok){const j=await r.json();ttsStatus(`Kết nối THÀNH CÔNG ✔ Key hợp lệ (thấy ${(j.models||[]).length} mô hình). Có thể đọc bài ngay.`);playCorrect()}else{const j=await r.json().catch(()=>({}));ttsStatus(`Kết nối thất bại (${r.status}): ${(j.error&&j.error.message)||"key không hợp lệ hoặc chưa bật Gemini API"}`);playWrong()}}catch(e){ttsStatus("Lỗi mạng/CORS: không gọi được Google AI. Hãy mở file bằng Chrome trực tiếp hoặc qua máy chủ localhost rồi thử lại.")}}
+function cleanSpeechText(el){let t="";const clone=el.cloneNode(true);clone.querySelectorAll("button,textarea,input,select,.footnav,script,style").forEach(x=>x.remove());t=clone.innerText||"";t=t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu," ").replace(/[•·]/g,", ").replace(/\s*\n\s*/g,". ").replace(/\s{2,}/g," ").replace(/(\.\s*){2,}/g,". ").trim();return t}
+function splitChunks(text,max=430){const sents=text.split(/(?<=[.!?…])\s+/);const raw=[];let buf="";for(const s of sents){if((buf+" "+s).length>max&&buf){raw.push(buf.trim());buf=s}else buf=buf?buf+" "+s:s}if(buf.trim())raw.push(buf.trim());const out=[];for(const c of raw){if(c.length<=max){out.push(c);continue}let b="";for(const w of c.split(/\s+/)){if((b+" "+w).length>max&&b){out.push(b.trim());b=w}else b=b?b+" "+w:w}if(b.trim())out.push(b.trim())}return out.filter(x=>x.length>8)}
+function pcmToWav(b64,rate=24000){const bin=atob(b64);const len=bin.length;const buf=new ArrayBuffer(44+len);const v=new DataView(buf);const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};ws(0,"RIFF");v.setUint32(4,36+len,true);ws(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);ws(36,"data");v.setUint32(40,len,true);for(let i=0;i<len;i++)v.setUint8(44+i,bin.charCodeAt(i));return new Blob([buf],{type:"audio/wav"})}
+function isWavB64(b64){try{const s=atob(b64.slice(0,24));return s.startsWith("RIFF")}catch(e){return false}}
+function getKeyPool(){const out=[];const push=k=>{k=(k||"").trim();if(k&&!out.includes(k))out.push(k)};push(gemKeyVal());(localStorage.getItem("tin9b1_gemini_key_pool")||"").split(/\r?\n/).forEach(push);return out}
+function saveKeyPool(){const v=document.getElementById("gemKeyPool").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);localStorage.setItem("tin9b1_gemini_key_pool",v.join("\n"));document.getElementById("poolStatus").textContent=v.length?`Đã lưu ${v.length} key dự phòng (chỉ trên máy này) ✔`:"Đã xoá danh sách key dự phòng.";toast("Đã lưu danh sách key dự phòng của bạn")}
+async function fetchTtsAudio(text,voice){const keys=getKeyPool();if(!keys.length)throw new Error("Chưa có API key");let lastErr="";
+ for(let ki=0;ki<keys.length;ki++){const k=keys[ki];if(ki>0){try{ttsStatus(`Key trước đã hết hạn mức hoặc không hợp lệ — đang xoay vòng sang key dự phòng ${ki} của bạn…`)}catch(e){}}
+  for(const m of TTS_MODELS){try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify({contents:[{parts:[{text}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})});
+   if(!r.ok){const j=await r.json().catch(()=>({}));lastErr=`${m} (${r.status}): ${(j.error&&j.error.message)||""}`;if(r.status===429||/quota|resource/i.test(lastErr))break;if(r.status===400&&/api key/i.test(lastErr))break;continue}
+   const j=await r.json();const parts=(((j.candidates||[])[0]||{}).content||{}).parts||[];const part=parts.find(x=>x.inlineData&&x.inlineData.data);
+   if(part){const d=part.inlineData.data;return isWavB64(d)?new Blob([Uint8Array.from(atob(d),c=>c.charCodeAt(0))],{type:"audio/wav"}):pcmToWav(d,(part.inlineData.sampleRate||24000))}
+   lastErr=m+": không có dữ liệu âm thanh trong phản hồi"}catch(e){lastErr=e.message||String(e);if(/api key/i.test(lastErr))break}}}
+ throw new Error(lastErr||"Không tạo được giọng đọc — mọi key của bạn đều hết hạn mức hoặc không hợp lệ")}
+async function playBlob(blob){return new Promise((res,rej)=>{const url=URL.createObjectURL(blob);const a=new Audio(url);TTS.audio=a;a.onended=()=>{URL.revokeObjectURL(url);res()};a.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Không phát được âm thanh"))};a.play().catch(rej)})}
+async function readSectionsGemini(ids){const k=gemKeyVal();if(!k){ttsStatus("Chưa có Gemini API key. Hãy dán key, bấm Lưu key — hoặc dùng nút đọc bằng giọng máy ở dưới.");toast("Cần nhập Gemini API key để dùng giọng AI");return}
+ TTS.stop=false;TTS.busy=true;window.__allowLocked=true;const voice=document.getElementById("gemVoice").value;
+ const jobs=[];ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;const title=(SECTIONS.find(s=>s[0]===id)||[])[1]||id;splitChunks(cleanSpeechText(el)).forEach((c,i)=>jobs.push({id,title,c,i}))});
+ if(!jobs.length){ttsStatus("Không trích được nội dung để đọc.");return}
+ let doneN=0;try{for(const job of jobs){if(TTS.stop)break;if(cur!==job.id){go(job.id)}
+   document.querySelectorAll("section.panel").forEach(s=>s.classList.toggle("reading",s.id===job.id));
+   ttsStatus(`Đang đọc: ${job.title} — đoạn ${doneN+1}/${jobs.length}. Đang tạo giọng AI, vui lòng chờ vài giây mỗi đoạn…`);
+   const blob=await fetchTtsAudio(job.c,voice);if(TTS.stop)break;await playBlob(blob);doneN++}
+  ttsStatus(TTS.stop?`Đã dừng đọc (đã đọc ${doneN}/${jobs.length} đoạn).`:`Đã đọc xong toàn bộ nội dung đã chọn (${doneN} đoạn) ✔`);if(!TTS.stop)playCorrect()}
+ catch(e){ttsStatus("Lỗi Gemini TTS: "+e.message+" — Hãy kiểm tra key, hạn mức (quota) và kết nối mạng; hoặc dùng giọng máy của trình duyệt.");playWrong()}
+ document.querySelectorAll("section.panel").forEach(s=>s.classList.remove("reading"));TTS.busy=false;window.__allowLocked=false}
+function readCurrentGemini(){return readSectionsGemini([cur])}
+function readAllGemini(){return readSectionsGemini(SECTIONS.map(s=>s[0]))}
+function pauseResumeTts(){if(TTS.audio){if(TTS.audio.paused){TTS.audio.play();ttsStatus("Tiếp tục đọc…")}else{TTS.audio.pause();ttsStatus("Đã tạm dừng — bấm nút này lần nữa để đọc tiếp.")}}else ttsStatus("Chưa có đoạn đọc nào đang phát.")}
+function stopTts(){TTS.stop=true;TTS.busy=false;window.__allowLocked=false;if(window.__mAudio){try{__mAudio.pause()}catch(e){}}if(TTS.audio){TTS.audio.pause();TTS.audio.currentTime=0}document.querySelectorAll("section.panel").forEach(s=>s.classList.remove("reading"));ttsStatus("Đã dừng đọc.")}
+
+
+/* ===== V3 JS: BÚT VẼ TRÌNH CHIẾU + HIỆU ỨNG REMOTION ===== */
+/* --- Ticker --- */
+(function(){const items=["Find: Home → Editing → Find → gõ từ, Enter", "Replace: Find what = từ cần tìm, Replace with = từ thay thế", "Find Next: tìm tiếp / bỏ qua từ không muốn thay", "Replace: thay từng từ — Replace All: thay toàn bộ", "Nhanh chóng, chính xác, không bỏ sót từ nào", "Thực hành: kem dưa hấu → kem xoài"];const half=items.map(t=>`<span>✦ <b>${t}</b></span>`).join("");document.getElementById("tickerIn").innerHTML=half})();
+
+/* --- Bút vẽ --- */
+const PEN={on:false,mode:"pen",color:"#f87171",drawing:false,last:null};
+const drawCv=document.getElementById("drawLayer"),dctx=drawCv.getContext("2d");
+function sizeDraw(keep=true){let snap=null;if(keep&&drawCv.width){snap=document.createElement("canvas");snap.width=drawCv.width;snap.height=drawCv.height;snap.getContext("2d").drawImage(drawCv,0,0)}
+ drawCv.width=innerWidth;drawCv.height=innerHeight;if(snap)dctx.drawImage(snap,0,0)}
+sizeDraw(false);addEventListener("resize",()=>sizeDraw(true));
+function togglePen(force){PEN.on=(force!==undefined)?force:!PEN.on;drawCv.classList.toggle("active",PEN.on);document.getElementById("penBar").classList.toggle("show",PEN.on);
+ document.querySelectorAll("#penBtnTop").forEach(b=>b.classList.toggle("pen-on",PEN.on));
+ const pb=document.getElementById("presentBar");if(PEN.on)toast("Bút vẽ BẬT — kéo chuột / chạm để vẽ lên màn hình, khoanh ý chính khi trình chiếu. Bấm Esc để tắt.");}
+function penMode(m,btn){PEN.mode=m;document.querySelectorAll("#penBar .btn").forEach(b=>b.classList.remove("primary"));if(btn)btn.classList.add("primary")}
+function penColor(c,btn){PEN.color=c;if(PEN.mode==="erase")PEN.mode="pen";document.querySelectorAll("#penBar .sw").forEach(b=>b.classList.remove("sel"));if(btn)btn.classList.add("sel")}
+function clearDraw(){dctx.clearRect(0,0,drawCv.width,drawCv.height);toast("Đã xoá hết nét vẽ")}
+function penPos(e){return{x:e.clientX,y:e.clientY}}
+drawCv.addEventListener("pointerdown",e=>{if(!PEN.on)return;PEN.drawing=true;PEN.last=penPos(e);drawCv.setPointerCapture(e.pointerId);penDot(PEN.last)});
+drawCv.addEventListener("pointermove",e=>{if(!PEN.on||!PEN.drawing)return;const p=penPos(e);penLine(PEN.last,p);PEN.last=p});
+["pointerup","pointercancel"].forEach(ev=>drawCv.addEventListener(ev,()=>{PEN.drawing=false;PEN.last=null}));
+function penStyle(){const s=+document.getElementById("penSize").value||4;
+ if(PEN.mode==="erase"){dctx.globalCompositeOperation="destination-out";dctx.globalAlpha=1;dctx.lineWidth=s*4}
+ else if(PEN.mode==="hl"){dctx.globalCompositeOperation="source-over";dctx.globalAlpha=.32;dctx.lineWidth=s*4.5}
+ else{dctx.globalCompositeOperation="source-over";dctx.globalAlpha=.95;dctx.lineWidth=s}
+ dctx.strokeStyle=PEN.color;dctx.fillStyle=PEN.color;dctx.lineCap="round";dctx.lineJoin="round"}
+function penDot(p){penStyle();dctx.beginPath();dctx.arc(p.x,p.y,dctx.lineWidth/2,0,7);dctx.fill()}
+function penLine(a,b){penStyle();dctx.beginPath();dctx.moveTo(a.x,a.y);dctx.lineTo(b.x,b.y);dctx.stroke()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&PEN.on)togglePen(false)});
+
+/* --- Hiệu ứng nền: hạt bay + vệt sáng theo chuột + pháo giấy (phong cách Remotion) --- */
+const bgCv=document.getElementById("bgFx"),bctx=bgCv.getContext("2d");
+function sizeBg(){bgCv.width=innerWidth;bgCv.height=innerHeight}
+sizeBg();addEventListener("resize",sizeBg);
+const STARS=Array.from({length:130},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.5+.4,ph:Math.random()*6.28,ts:Math.random()*.03+.008,dr:Math.random()*.010+.003,big:Math.random()<.12}));let meteors=[],meteorAt=Date.now()+3000,nextShowerAt=Date.now()+14000;
+function spawnMeteor(delay){meteors.push({x:bgCv.width*(.3+Math.random()*.65),y:bgCv.height*Math.random()*.32-16,vx:-(6.5+Math.random()*4.5),vy:3.8+Math.random()*2.2,life:1,delay:delay||0})}
+let confetti=[],glowX=-500,glowY=-500,mouseX=-500,mouseY=-500;
+addEventListener("pointermove",e=>{mouseX=e.clientX;mouseY=e.clientY});
+function confettiBurst(n=130){const cols=["#ffb020","#2dd4bf","#818cf8","#fb7185","#34d399","#f4f5ff"];for(let i=0;i<n;i++){const a=Math.random()*6.28,v=Math.random()*9+3;confetti.push({x:innerWidth/2,y:innerHeight*.32,vx:Math.cos(a)*v,vy:Math.sin(a)*v-4,g:.22,life:1,dec:Math.random()*.008+.006,s:Math.random()*7+4,c:cols[i%cols.length],rot:Math.random()*6.28,vr:(Math.random()-.5)*.3})}}
+function fxLoop(){bctx.clearRect(0,0,bgCv.width,bgCv.height);
+ for(const s of STARS){s.ph+=s.ts;s.x-=s.dr/100;if(s.x<-.02){s.x=1.02;s.y=Math.random()}const X=s.x*bgCv.width,Y=s.y*bgCv.height;const a=.3+.6*Math.abs(Math.sin(s.ph));bctx.beginPath();bctx.arc(X,Y,s.r,0,7);bctx.fillStyle=`rgba(255,255,255,${a})`;bctx.fill();if(s.big){bctx.strokeStyle=`rgba(190,200,255,${a*.65})`;bctx.lineWidth=1;bctx.beginPath();bctx.moveTo(X-s.r*4.5,Y);bctx.lineTo(X+s.r*4.5,Y);bctx.moveTo(X,Y-s.r*4.5);bctx.lineTo(X,Y+s.r*4.5);bctx.stroke()}}
+ if(Date.now()>meteorAt){spawnMeteor(0);meteorAt=Date.now()+6000+Math.random()*6000}
+ if(Date.now()>nextShowerAt){const n=9+Math.floor(Math.random()*7);for(let i=0;i<n;i++)spawnMeteor(i*(130+Math.random()*280));nextShowerAt=Date.now()+24000+Math.random()*18000}
+ meteors=meteors.filter(m=>m.life>0&&m.x>-90&&m.y<bgCv.height+90);
+ for(const m of meteors){if(m.delay>0){m.delay-=16;continue}m.x+=m.vx;m.y+=m.vy;m.life-=.011;const gr=bctx.createLinearGradient(m.x,m.y,m.x-m.vx*9,m.y-m.vy*9);gr.addColorStop(0,`rgba(255,255,255,${.9*Math.max(m.life,0)})`);gr.addColorStop(1,"rgba(255,255,255,0)");bctx.strokeStyle=gr;bctx.lineWidth=2;bctx.beginPath();bctx.moveTo(m.x,m.y);bctx.lineTo(m.x-m.vx*9,m.y-m.vy*9);bctx.stroke();bctx.beginPath();bctx.arc(m.x,m.y,2,0,7);bctx.fillStyle=`rgba(255,255,255,${Math.max(m.life,0)})`;bctx.fill()}
+ confetti=confetti.filter(c=>c.life>0);for(const c of confetti){c.x+=c.vx;c.y+=c.vy;c.vy+=c.g;c.vx*=.99;c.life-=c.dec;c.rot+=c.vr;bctx.save();bctx.translate(c.x,c.y);bctx.rotate(c.rot);bctx.globalAlpha=Math.max(c.life,0);bctx.fillStyle=c.c;bctx.fillRect(-c.s/2,-c.s/2,c.s,c.s*.62);bctx.restore()}bctx.globalAlpha=1;
+ glowX+=(mouseX-glowX)*.08;glowY+=(mouseY-glowY)*.08;const g=document.getElementById("cursorGlow");if(g){g.style.left=glowX+"px";g.style.top=glowY+"px"}
+ requestAnimationFrame(fxLoop)}
+fxLoop();
+
+/* --- Xuất hiện nảy theo nhịp khi mở phần (spring kiểu Remotion) --- */
+const _go1=go;go=function(id){_go1(id);staggerIn(id)};
+function staggerIn(id){const el=document.getElementById(id);if(!el||!el.querySelectorAll)return;el.querySelectorAll(".card,.act,.kbox,.flip,.q,.msg,.sortcard").forEach((n,i)=>{n.classList.remove("rise","in");void n.offsetWidth;n.style.setProperty("--d",(Math.min(i,10)*.06)+"s");n.classList.add("rise");requestAnimationFrame(()=>n.classList.add("in"));n.addEventListener("animationend",()=>n.classList.remove("rise","in"),{once:true})})}
+
+/* --- Nghiêng 3D theo chuột cho thẻ lật & thẻ thiết bị --- */
+document.addEventListener("pointermove",e=>{const t=e.target.closest?e.target.closest(".flip,#deviceGrid .card"):null;document.querySelectorAll(".flip.tilting,#deviceGrid .card.tilting").forEach(x=>{if(x!==t){x.style.transform="";x.classList.remove("tilting")}});
+ if(!t||t.classList.contains("rise"))return;const r=t.getBoundingClientRect();const rx=((e.clientY-r.top)/r.height-.5)*-7,ry=((e.clientX-r.left)/r.width-.5)*9;t.classList.add("tilting");t.style.transform=`perspective(750px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`});
+staggerIn(cur);
+
+
+/* ===== V5 JS: NHÂN VẬT TRỢ GIẢNG "BIT" ===== */
+const MASCOT_TIPS=["Find ở thẻ Home, nhóm Editing — gõ từ cần tìm rồi nhấn Enter nhé!", "Find what là từ cần tìm, Replace with là từ thay thế — đừng gõ nhầm hai ô!", "Muốn thay tất cả: Replace All. Chỉ thay một số: Find Next + Replace từng từ.", "Gặp từ không muốn thay, bấm Find Next để bỏ qua.", "Sau khi thay thế xong, nhớ đọc lại văn bản để kiểm tra kết quả.", "Được 8/10 điểm kiểm tra là em nhận chứng nhận hoàn thành đấy!"];;;;;;;;;;;;
+const MASCOT_BY_SECTION={"muctieu": "Hôm nay mình thực hành tìm và thay từ — sửa cả bài văn chỉ trong vài giây!", "phan1": "Nhanh chóng, chính xác, không bỏ sót — đó là ba ưu điểm của công cụ này.", "phan2": "Thuộc lòng nhé: Find có 3 bước, Replace có 5 bước, hai lệnh đều ở nhóm Editing.", "phan3": "Gõ đúng chính tả ở cả hai ô, nếu không phần mềm sẽ báo không tìm thấy đâu.", "luyentap": "Nhớ tình huống của An: thay tất cả thì Replace All, thay một số thì Find Next + Replace.", "quiz": "Câu nào hỏi về bỏ qua một từ — đáp án là Find Next đấy!", "tongket": "Xuất sắc! Bài 14 sẽ tổng hợp mọi kĩ năng để hoàn thiện cuốn Sổ lưu niệm."};;;;;;;;;;;;
+let mascotTimer=null,mascotTipIdx=0;
+function mascotSay(t,sticky=false){const b=document.getElementById("mascotBubble");if(!b)return;b.innerHTML=t;b.classList.add("show");clearTimeout(mascotTimer);if(!sticky)mascotTimer=setTimeout(()=>b.classList.remove("show"),9000)}
+function mascotTap(){mascotTipIdx=(mascotTipIdx+1)%MASCOT_TIPS.length;mascotSay("💡 "+MASCOT_TIPS[mascotTipIdx]);playClick()}
+function toggleMascot(show){document.getElementById("mascot").style.display=show?"":"none";document.getElementById("mascotOpen").style.display=show?"none":"block";if(show)mascotSay("Mình quay lại rồi đây! Cần gợi ý thì bấm vào mình nhé.")}
+const _go2=go;go=function(id){_go2(id);if(MASCOT_BY_SECTION[id])mascotSay(MASCOT_BY_SECTION[id])};
+const _cf0=confettiBurst;confettiBurst=function(n){_cf0(n);mascotSay("🎉 Tuyệt vời! Em làm rất tốt — tiếp tục phát huy nhé!")};
+setTimeout(()=>mascotSay(document.getElementById("mascotBubble").innerHTML),600);
+
+
+/* ===== V6 JS: MỞ KHÓA TỪNG BƯỚC + BIT KÉO THẢ + BIT NÓI TTS + VIỀN VÀNG ===== */
+function isUnlocked(id){if(localStorage.getItem("tin6b13_unlock_all")==="1")return true;const i=SECTIONS.findIndex(s=>s[0]===id);if(i<=0)return true;for(let j=0;j<i;j++)if(!doneSet.has(SECTIONS[j][0]))return false;return true}
+function unlockedIds(){return SECTIONS.map(s=>s[0]).filter(isUnlocked)}
+function renderLocks(freshId){SECTIONS.forEach(([id])=>{const n=document.getElementById("nav-"+id);if(!n)return;const locked=!isUnlocked(id);n.classList.toggle("locked",locked);const d=n.querySelector(".dot");if(d)d.textContent=doneSet.has(id)?"✓":(locked?"🔒":"•");if(freshId===id){n.classList.add("fresh");setTimeout(()=>n.classList.remove("fresh"),850)}});
+ const ub=document.getElementById("unlockAllBtn");if(ub)ub.textContent=localStorage.getItem("tin6b13_unlock_all")==="1"?"🔒 Khóa lại theo tiến độ":"🔓 Mở khóa tất cả"}
+let adminMode="unlock";
+function hasAdminPw(){return !!localStorage.getItem("tin6b13_admin_hash")}
+const ADMIN_PRESET="723ef1a65178803e8fffea5dccfa64d2d373a4f1b8ad34e56ae00021ffdc0e36";async function hashWith(s,pw){s=s||"";try{if(window.crypto&&crypto.subtle){const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s+"::"+pw));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("")}}catch(e){}let x=5381;const str=s+"::"+pw;for(let i=0;i<str.length;i++)x=((x*33)^str.charCodeAt(i))>>>0;return "fnv"+x.toString(16)}
+async function hashPw(pw){return hashWith(localStorage.getItem("tin6b13_admin_salt")||"",pw)}
+async function checkAdminPw(pw){if(await hashWith("tin9b1admin",pw)===ADMIN_PRESET)return true;if(hasAdminPw()&&await hashPw(pw)===localStorage.getItem("tin6b13_admin_hash"))return true;return false}
+function unlockAllToggle(){if(localStorage.getItem("tin6b13_unlock_all")==="1"){localStorage.removeItem("tin6b13_unlock_all");toast("Đã khóa lại theo thứ tự tiến độ học tập");renderLocks();return}openAdminModal("unlock")}
+function openAdminModal(mode){adminMode=mode;const title=document.getElementById("adminTitle"),desc=document.getElementById("adminDesc"),wrap=document.getElementById("adminNewWrap"),l2=document.getElementById("adminPw2Label"),l1=document.getElementById("adminPwLabel"),chg=document.getElementById("adminChangeBtn");
+ document.getElementById("adminPw").value="";document.getElementById("adminPw2").value="";document.getElementById("adminStatus").textContent="";
+ if(mode==="change"){title.textContent="🔐 Đổi mật khẩu admin";desc.textContent="Nhập mật khẩu hiện tại và mật khẩu mới (ít nhất 4 ký tự).";l1.textContent="Mật khẩu hiện tại";wrap.style.display="";l2.textContent="Mật khẩu mới";chg.style.display="none"}
+ else{title.textContent="🔐 Mở khóa tất cả";desc.textContent="Nhập mật khẩu admin để mở khóa tất cả các phần trong mục lục.";l1.textContent="Mật khẩu admin";wrap.style.display="none";chg.style.display=""}
+ document.getElementById("adminModal").classList.add("show")}
+function closeAdmin(){document.getElementById("adminModal").classList.remove("show")}
+function adminErr(t){document.getElementById("adminStatus").textContent=t;playWrong()}
+function doUnlockAll(msg){localStorage.setItem("tin6b13_unlock_all","1");closeAdmin();renderLocks();toast("🔓 "+msg);playCorrect();mascotSay("Đã mở khóa tất cả các phần rồi. Em vào phần nào cũng được!")}
+async function submitAdmin(){const pw=document.getElementById("adminPw").value,pw2=document.getElementById("adminPw2").value;
+ if(adminMode==="change"){if(!await checkAdminPw(pw)){adminErr("Mật khẩu hiện tại chưa đúng.");return}
+  if(pw2.length<4){adminErr("Mật khẩu mới cần ít nhất 4 ký tự.");return}
+  if(!localStorage.getItem("tin6b13_admin_salt"))localStorage.setItem("tin6b13_admin_salt",Math.random().toString(36).slice(2)+Date.now().toString(36));
+  localStorage.setItem("tin6b13_admin_hash",await hashPw(pw2));closeAdmin();toast("Đã đổi mật khẩu admin ✔");playCorrect();return}
+ if(await checkAdminPw(pw)){doUnlockAll("Đã mở khóa tất cả các phần")}else{adminErr("Mật khẩu chưa đúng — vui lòng thử lại.")}}
+const _go3=go;go=function(id){if(!window.__allowLocked&&!isUnlocked(id)){const i=SECTIONS.findIndex(s=>s[0]===id);const prev=SECTIONS[Math.max(0,i-1)];toast("🔒 Phần này chưa mở khóa — hãy hoàn thành phần trước và bấm nút Tiếp theo nhé!");playWrong();const n=document.getElementById("nav-"+id);if(n){n.classList.add("shake");setTimeout(()=>n.classList.remove("shake"),360)}mascotSay("Phần này đang khóa 🔒. Em hoàn thành phần <b>"+(prev?prev[1]:"trước")+"</b> rồi bấm nút <b>Tiếp theo</b> để mở khóa nhé!");return}_go3(id);renderLocks()};
+const _done0=done;done=function(id){const before=unlockedIds();_done0(id);const fresh=unlockedIds().filter(x=>!before.includes(x));renderLocks(fresh[0]);if(fresh.length){const label=(SECTIONS.find(s=>s[0]===fresh[0])||[])[1]||fresh[0];setTimeout(()=>{toast("🔓 Đã mở khóa phần: "+label);playCorrect();mascotSay("🔓 Mở khóa phần mới rồi: <b>"+label+"</b>. Tiếp tục nào!")},80)}};
+const _reset0=resetAll;resetAll=function(){_reset0();localStorage.removeItem("tin6b13_unlock_all");renderLocks();toast("Đã học lại từ đầu — các phần được khóa lại theo từng bước")};
+
+/* --- Bit nói chuyện bằng giọng TTS --- */
+let MVOICE=localStorage.getItem("tin9b1_mascot_voice")!=="0",mAudio=null,mSpeakSeq=0;
+window.__mAudio=null;
+function stripForSpeech(html){let t=String(html||"").replace(/<[^>]*>/g," ").replace(/&nbsp;/gi," ").replace(/&amp;/gi,"&").replace(/&lt;/gi,"<").replace(/&gt;/gi,">");return t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu," ").replace(/\s+/g," ").trim()}
+async function mascotSpeak(html){if(!MVOICE)return;const text=stripForSpeech(html);if(text.length<4)return;if(window.TTS&&TTS.busy)return;const seq=++mSpeakSeq;
+ speakBrowser=function(){try{const u=new SpeechSynthesisUtterance(text);u.lang="vi-VN";u.rate=1.02;speechSynthesis.speak(u)}catch(e){}};
+ const key=(typeof gemKeyVal==="function")?gemKeyVal():"";
+ if(key){try{const blob=await fetchTtsAudio(text.slice(0,320),(document.getElementById("gemVoice")||{}).value||"Charon");if(seq!==mSpeakSeq||!MVOICE)return;if(mAudio){try{mAudio.pause()}catch(e){}}const url=URL.createObjectURL(blob);mAudio=new Audio(url);window.__mAudio=mAudio;mAudio.onended=()=>URL.revokeObjectURL(url);await mAudio.play();return}catch(e){}}
+ speakBrowser()}
+const _say0=mascotSay;mascotSay=function(t,sticky){_say0(t,sticky);mascotSpeak(t)};
+function toggleMascotVoice(e){if(e&&e.stopPropagation)e.stopPropagation();MVOICE=!MVOICE;localStorage.setItem("tin9b1_mascot_voice",MVOICE?"1":"0");const b=document.getElementById("mascotVoice");if(b)b.textContent=MVOICE?"🔊":"🔇";if(mAudio){try{mAudio.pause()}catch(err){}}try{speechSynthesis.cancel()}catch(err){}if(MVOICE){mascotSay("Đã bật tiếng rồi! Mình sẽ đọc thuyết minh cho em nghe.");}else toast("Đã tắt giọng nói của Bit")}
+(function(){const b=document.getElementById("mascotVoice");if(b)b.textContent=MVOICE?"🔊":"🔇"})();
+
+/* --- Bit kéo thả di chuyển --- */
+let suppressTap=false;
+function mascotBotTap(){if(suppressTap){suppressTap=false;return}mascotTap()}
+(function(){const box=document.getElementById("mascot"),bot=document.getElementById("mascotBot");if(!box||!bot)return;
+ try{const pos=JSON.parse(localStorage.getItem("tin6b13_mascot_pos")||"null");if(pos&&typeof pos.x==="number"){box.style.left=pos.x+"px";box.style.top=pos.y+"px";box.style.bottom="auto"}}catch(e){}
+ let drag=null;
+ bot.addEventListener("pointerdown",e=>{if(window.__bitFixed)return;if(e.button!==undefined&&e.button>0)return;const r=box.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top,moved:false};try{bot.setPointerCapture(e.pointerId)}catch(err){}});
+ bot.addEventListener("pointermove",e=>{if(!drag)return;const nx=Math.min(Math.max(2,e.clientX-drag.dx),innerWidth-112),ny=Math.min(Math.max(2,e.clientY-drag.dy),innerHeight-190);if(Math.abs(e.clientX-(box.offsetLeft+drag.dx))>5||drag.moved){drag.moved=true;box.classList.add("dragging");box.style.left=nx+"px";box.style.top=ny+"px";box.style.bottom="auto"}});
+ ["pointerup","pointercancel"].forEach(ev=>bot.addEventListener(ev,()=>{if(!drag)return;if(drag.moved){suppressTap=true;localStorage.setItem("tin6b13_mascot_pos",JSON.stringify({x:box.offsetLeft,y:box.offsetTop}));setTimeout(()=>box.classList.remove("dragging"),60)}drag=null}));
+ bot.addEventListener("dblclick",()=>{box.style.left="";box.style.top="";box.style.bottom="";localStorage.removeItem("tin6b13_mascot_pos");mascotSay("Mình về góc trái màn hình rồi đây!")});
+})();
+renderLocks();
+
+
+/* ===== V7 JS: HỘP THOẠI NHẬP KEY ĐẦU TIÊN + BIT TỰ DI CHUYỂN HOẠT HÌNH ===== */
+function showKeyPromptIfNeeded(){if(gemKeyVal())return;if(localStorage.getItem("tin6b13_key_prompt_dismissed")==="1")return;setTimeout(()=>{document.getElementById("keyModal").classList.add("show");mascotSay("Chào em! Nhập <b>API key</b> trước để mình đọc thuyết minh bằng giọng AI thật hay nhé. Chưa có key thì bấm Bỏ qua cũng được.")},900)}
+function closeKeyModal(){document.getElementById("keyModal").classList.remove("show");localStorage.setItem("tin6b13_key_prompt_dismissed","1")}
+function saveFirstKey(){const k=document.getElementById("firstKey").value.trim();const st=document.getElementById("firstKeyStatus");if(!k){st.textContent="Bạn chưa dán key — hãy dán key vào ô trên, hoặc bấm Bỏ qua.";return}localStorage.setItem("tin9b1_gemini_key",k);localStorage.setItem("tin6b13_key_prompt_dismissed","1");document.getElementById("keyModal").classList.remove("show");toast("Đã lưu API key — trải nghiệm giọng đọc AI đã sẵn sàng 🎙️");playCorrect();mascotSay("Tuyệt vời! Từ giờ mình sẽ đọc thuyết minh bằng giọng AI Charon cho em nghe.");testGemKey()}
+showKeyPromptIfNeeded();
+
+/* --- Bit tự đi qua lại ở khu vực góc trái, kiểu phim hoạt hình --- */
+const ROAM={x:16,dir:1,state:"walk",until:0,lastTs:0,speed:42,resumeAt:0};
+const roamReduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+(function(){const bot=document.getElementById("mascotBot");if(bot){bot.addEventListener("pointerdown",()=>{window.__bitHold=true});["pointerup","pointercancel"].forEach(ev=>bot.addEventListener(ev,()=>{window.__bitHold=false;ROAM.resumeAt=performance.now()+12000}))}})();
+function roamBounds(){return{min:8,max:Math.max(70,Math.min(innerWidth*.36,360))}}
+function roamFrame(){requestAnimationFrame(roamFrame);const box=document.getElementById("mascot"),bot=document.getElementById("mascotBot");if(!box||!bot)return;
+ const now=performance.now();const dt=Math.min(.05,(now-(ROAM.lastTs||now))/1000);ROAM.lastTs=now;
+ if(window.__bitFixed||roamReduced||box.style.display==="none"||window.__bitHold||now<ROAM.resumeAt||document.hidden)return;
+ if(!ROAM.init){ROAM.x=box.offsetLeft||16;ROAM.init=true}
+ const b=roamBounds();
+ if(ROAM.state==="walk"){ROAM.x+=ROAM.dir*ROAM.speed*dt;
+  if(ROAM.x>=b.max){ROAM.x=b.max;ROAM.dir=-1;ROAM.state="idle";ROAM.until=now+1300+Math.random()*1600;bot.style.transform="scaleX(-1)"}
+  else if(ROAM.x<=b.min){ROAM.x=b.min;ROAM.dir=1;ROAM.state="idle";ROAM.until=now+1300+Math.random()*1600;bot.style.transform="scaleX(1)"}
+  box.style.left=ROAM.x+"px";box.classList.add("walk");box.classList.remove("hop")}
+ else{if(now>=ROAM.until){ROAM.state="walk";if(Math.random()<.3){box.classList.add("hop");setTimeout(()=>box.classList.remove("hop"),580)}}box.classList.remove("walk")}}
+requestAnimationFrame(roamFrame);
+
+
+/* ===== V11 JS: CỐ ĐỊNH NHÂN VẬT BIT TRÊN PHI THUYỀN ===== */
+window.__bitFixed=true;
+(function(){const box=document.getElementById("mascot"),bot=document.getElementById("mascotBot");if(box){box.style.left="";box.style.top="";box.style.bottom="";box.classList.remove("walk","dragging")}if(bot)bot.style.transform="";localStorage.removeItem("tin6b13_mascot_pos")})();
+
+go("muctieu");updPresentCnt();renderLocks();
+</script>
+<script>
+/* ===== BAI 7 JS: SO DO TU DUY TUONG TAC ===== */
+const MM=[["🔍 1. SBT Câu 13.1: Lệnh Find dùng khi nào?", "Lệnh Find được sử dụng khi muốn tìm kiếm một từ hoặc cụm từ trong văn bản — đáp án B. Các phương án còn lại thuộc về định dạng văn bản hoặc lệnh Replace.", "✅ SBT Câu 13.1 — trang 50"], ["✍️ 2. SBT Câu 13.2: Điền từ vào chỗ chấm", "a) Để tìm kiếm một từ hoặc cụm từ trong văn bản, em chọn lệnh Find. b) Để thay thế một từ hoặc cụm từ tìm kiếm được bằng một từ hoặc cụm từ khác, em dùng lệnh Replace.", "✅ SBT Câu 13.2 — trang 50"], ["🧩 3. SBT Câu 13.6: Hoàn thiện đoạn văn", "“Công cụ Tìm kiếm và Thay thế giúp chúng ta tìm kiếm hoặc thay thế các từ hoặc cụm từ theo yêu cầu một cách nhanh chóng và chính xác.” Bốn từ cần điền theo thứ tự thuộc nhóm: thay thế — tìm kiếm/thay thế — yêu cầu — chính xác.", "✅ SBT Câu 13.6 — trang 51"], ["⏭️ 4. SBT Câu 13.9: Bỏ qua một từ không muốn thay", "Khi sử dụng hộp thoại Find and Replace, nếu tìm được một từ mà chúng ta không muốn thay thế, chúng ta có thể bỏ qua từ đó bằng cách chọn lệnh Find Next — phần mềm sẽ chuyển sang tìm từ tiếp theo.", "✅ SBT Câu 13.9 — trang 52"]];;;;;;;;;;;;
+const mmGrid=document.getElementById("mmGrid");
+MM.forEach((b,i)=>{const btn=document.createElement("button");btn.className="btn";btn.style.whiteSpace="normal";btn.innerHTML=b[0];btn.onclick=()=>mmShow(i);mmGrid.appendChild(btn)});
+function mmShow(i){document.getElementById("mmTitle").textContent=MM[i][0];document.getElementById("mmTxt").textContent=MM[i][1];document.getElementById("mmAtt").innerHTML="📎 <b>Đính kèm:</b> "+MM[i][2];playClick()}
+</script>
+</body>
+</html>
