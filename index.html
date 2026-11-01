@@ -582,6 +582,185 @@
         .click-fx-ring { position: fixed; z-index: 2000; pointer-events: none; width: 36px; height: 36px; margin: -18px 0 0 -18px; border: 2px solid #facc15; border-radius: 50%; animation: clickFxRing 0.6s ease-out forwards; }
         @keyframes clickFxRing { from { transform: scale(0.4); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .click-fx-star, .click-fx-ring { animation: none; } }
+
+        /* ===== V28: NỀN TRẮNG THÌ CÁC THẺ NỘI DUNG CŨNG CÓ VIỀN NHƯ Ô TÌM KIẾM =====
+           Ô tìm kiếm dùng: border 2px #f59e0b + animation aiGoldPulse.
+           Khi body.space-off (nền trắng), áp đúng khung đó cho các thẻ
+           nội dung khác, để viền vàng hiện luôn, không phải chỉ khi rê
+           chuột mới vàng. Khi rê chuột thì vẫn giữ vàng đậm + nổi lên,
+           không đổi sang chàm như thẻ lưới mặc định. Không đổi sidebar,
+           modal, form admin, nút bấm, khung tài liệu bên trong bài học,
+           và không đổi gì ở chế độ nền vũ trụ. */
+        body.space-off #grid-links .grid-card-item,
+        body.space-off #category-view > div.bg-white:first-of-type,
+        body.space-off #lesson-view > div.bg-white,
+        body.space-off #quiz-body > div.bg-white,
+        body.space-off #cat-view-lessons .cat-card,
+        body.space-off #cat-view-quizzes .cat-card,
+        body.space-off #cat-view-lessons > p.bg-white,
+        body.space-off #cat-view-quizzes > p.bg-white {
+            border: 2px solid #f59e0b !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+        body.space-off #grid-links .grid-card-item:hover,
+        body.space-off #cat-view-lessons .cat-card:hover,
+        body.space-off #cat-view-quizzes .cat-card:hover {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 2px rgba(251,191,36,.45), 0 0 24px rgba(251,191,36,.40), 0 14px 30px rgba(245,158,11,.25) !important;
+            transform: translateY(-2px);
+        }
+
+        /* ===== V29: NỀN TRẮNG BỔ SUNG VIỀN MENU + TIÊU ĐỀ HEADER =====
+           V28 đã cho các thẻ nội dung viền như ô tìm kiếm khi nền
+           trắng, nhưng khung menu trái và tiêu đề header vẫn chưa
+           có. Khối này bổ sung đúng khung tìm kiếm (2px #f59e0b +
+           aiGoldPulse) cho: khung menu trái (#main-sidebar), thanh
+           tiêu đề trên cùng (> header) và khối tiêu đề banner ở
+           trang chủ (#dashboard-view > div:first-child). Chỉ áp khi
+           body.space-off (nền trắng), không đổi nền vũ trụ. */
+        body.space-off #main-sidebar {
+            background: #ffffff !important;
+            border: 2px solid #f59e0b !important;
+            border-radius: 1.25rem !important;
+            margin: 12px 0 12px 12px !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+        body.space-off > header {
+            border: 2px solid #f59e0b !important;
+            border-radius: 1rem !important;
+            margin: 12px 12px 0 12px !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+        body.space-off #dashboard-view > div:first-child {
+            border: 2px solid #f59e0b !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+
+        /* ===== V29: NỀN ĐEN BỎ KHUNG LỚN BÊN PHẢI, VIỀN TỪNG NỘI DUNG =====
+           Nền đen (không phải space-off) trước đây có khung viền lớn
+           bao quanh toàn bộ nội dung phải (#scrollable-content, 2px
+           #f59e0b + aiGoldPulse). Bỏ khung lớn đó, giữ nguyên nền
+           và bo góc của khung chứa, và thay bằng viền từng nội dung
+           bên phải giống như ở nền trắng: thẻ lưới, thẻ tiêu đề danh
+           mục, khung chi tiết bài/đề, thẻ bài/đề, thẻ trạng thái
+           trống đều có viền 2px #f59e0b + aiGoldPulse. Khung menu
+           trái và khối tiêu đề banner ở nền đen vốn đã có viền vàng
+           nên giữ nguyên. */
+        body:not(.space-off) #scrollable-content {
+            border: none !important;
+            animation: none !important;
+            box-shadow: none !important;
+        }
+        body:not(.space-off) #grid-links .grid-card-item,
+        body:not(.space-off) #category-view > div.bg-white:first-of-type,
+        body:not(.space-off) #lesson-view > div.bg-white,
+        body:not(.space-off) #quiz-body > div.bg-white,
+        body:not(.space-off) #cat-view-lessons .cat-card,
+        body:not(.space-off) #cat-view-quizzes .cat-card,
+        body:not(.space-off) #cat-view-lessons > p.bg-white,
+        body:not(.space-off) #cat-view-quizzes > p.bg-white {
+            border: 2px solid #f59e0b !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+
+        /* ===== V29: RÊ CHUỘT Ở NỀN ĐEN ĐỔI SANG TRẮNG (THAY VÌ VÀNG) =====
+           Trước đây ở nền đen, rê chuột vào mục menu, thẻ lưới và
+           nút ở header/sidebar thì chữ/viền đổi sang vàng (#fbbf24 /
+           #f59e0b). Từ v29, ở nền đen, rê chuột đổi sang trắng:
+           chữ mục menu trắng, viền trái mục menu trắng, tiêu đề
+           thẻ lưới trắng, viền thẻ nội dung trắng + bóng trắng.
+           Khối này đặt sau các quy tắc vàng cũ nên thắng nhờ thứ
+           tự và !important, không cần sửa văn bản gốc. Ở nền trắng,
+           viền khi rê chuột vẫn giữ vàng như v28, vì viền trắng
+           trên nền trắng sẽ không nhìn thấy. */
+        body:not(.space-off) .menu-btn-item:hover { color: #ffffff !important; border-left-color: #ffffff !important; }
+        body:not(.space-off) #grid-links .grid-card-item:hover h4 { color: #ffffff !important; }
+        body:not(.space-off) #grid-links .grid-card-item:hover,
+        body:not(.space-off) #cat-view-lessons .cat-card:hover,
+        body:not(.space-off) #cat-view-quizzes .cat-card:hover {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 0 2px rgba(255,255,255,.45), 0 0 24px rgba(255,255,255,.40), 0 14px 30px rgba(255,255,255,.25) !important;
+            transform: translateY(-2px);
+        }
+        body:not(.space-off) header button:hover, body:not(.space-off) .floating-controls button:hover, body:not(.space-off) #main-sidebar button:hover { border-color: rgba(255,255,255,.95) !important; box-shadow: 0 0 0 2px rgba(255,255,255,.5), 0 0 18px rgba(255,255,255,.6) !important; }
+
+        /* ===== V30: BỔ SUNG KHUNG VIỀN CHO THANH TIÊU ĐỀ VÀ CHÂN TRANG =====
+           Thanh tiêu đề trên cùng ở nền đen trước đây chỉ có viền
+           dưới mỏng 1px, chân trang ở cả 2 nền chỉ có viền trên
+           mỏng 1px, chưa có khung như ô tìm kiếm. Khối này bổ sung
+           đúng khung tìm kiếm (viền 2px #f59e0b + bóng vàng phát
+           sáng aiGoldPulse) cho cả 2 chỗ:
+           - Thanh tiêu đề nền đen: thành 1 thẻ bo góc, cách mép
+             12px, giống thanh tiêu đề nền trắng đã có ở v29.
+           - Chân trang (#site-footer) ở cả 2 nền: thành 1 thẻ bo
+             góc, cách mép 12px, viền vàng + bóng vàng. Chỉ đổi
+             viền/bo góc/cách mép/hiệu ứng, không đổi màu chữ,
+             nền hay nội dung bản quyền, và không đổi trạng thái
+             ẩn chân trang khi làm bài toàn màn hình. */
+        body:not(.space-off) > header {
+            border: 2px solid #f59e0b !important;
+            border-radius: 1rem !important;
+            margin: 12px 12px 0 12px !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+        #site-footer {
+            border: 2px solid #f59e0b !important;
+            border-radius: 1rem !important;
+            margin: 12px !important;
+            animation: aiGoldPulse 2.2s ease-in-out infinite;
+        }
+
+        /* ===== V31: NỀN TRẮNG, RÊ CHUỘT ĐỔI KHUNG VIỀN SANG XANH =====
+           Ở nền trắng, viền thẻ vốn đã vàng như ô tìm kiếm, mà
+           khi rê chuột viền vẫn vàng nên không thấy hiệu ứng.
+           Từ v31, chỉ ở nền trắng, rê chuột vào thẻ lưới trang
+           chủ, thẻ bài học và thẻ đề thi thì khung viền đổi
+           sang xanh lá #10b981 (xanh đã dùng trong trang, ví
+           dụ nút chia sẻ đang hoạt động) kèm bóng xanh, vẫn
+           nổi lên 2px, và tiêu đề thẻ lưới/bài học cũng đổi
+           sang xanh cho đồng bộ với viền. Viền khi không rê
+           chuột vẫn giữ vàng như ô tìm kiếm. Nền đen giữ
+           nguyên như v29 (rê chuột đổi sang trắng, vốn đã
+           khác với viền vàng nên đã có hiệu ứng). Khối này
+           đặt sau các quy tắc hover cũ nên thắng nhờ thứ tự
+           và !important, không cần sửa văn bản gốc. */
+        body.space-off #grid-links .grid-card-item:hover,
+        body.space-off #cat-view-lessons .cat-card:hover,
+        body.space-off #cat-view-quizzes .cat-card:hover {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 2px rgba(16,185,129,.45), 0 0 24px rgba(16,185,129,.40), 0 14px 30px rgba(16,185,129,.25) !important;
+            transform: translateY(-2px);
+        }
+        body.space-off #grid-links .grid-card-item:hover h4,
+        body.space-off #cat-view-lessons .cat-card:hover h4 {
+            color: #10b981 !important;
+        }
+        /* Thẻ đề thi có nền chàm đậm, tiêu đề trắng vốn đã rõ nên
+           giữ trắng khi rê chuột, chỉ đổi viền sang xanh, tránh
+           chữ xanh trên nền chàm bị khó đọc. */
+
+        /* ===== V32: THẺ LƯỚI NỀN TRẮNG, RÊ CHUỘT VIỀN XANH DƯƠNG =====
+           V31 cho thẻ lưới nền trắng rê chuột viền xanh lá, nhưng
+           bạn muốn xanh dương cho khung lưới. Từ v32, chỉ ở nền
+           trắng, rê chuột vào thẻ lưới trang chủ (#grid-links)
+           thì khung viền đổi sang xanh dương #2563eb kèm bóng
+           xanh dương, vẫn nổi lên 2px, và tiêu đề thẻ cũng đổi
+           sang xanh dương cho đồng bộ. Viền khi không rê chuột
+           vẫn giữ vàng như ô tìm kiếm, nên hiệu ứng vàng ->
+           xanh dương nhìn thấy rõ. Thẻ bài học / đề thi trong
+           trang danh mục giữ nguyên viền xanh lá khi rê chuột
+           của v31, nền đen giữ nguyên rê chuột trắng của v29;
+           khối này chỉ nhắm đúng #grid-links nên không đổi
+           các thẻ khác. Khối đặt sau v31 nên thắng nhờ thứ tự
+           và !important. */
+        body.space-off #grid-links .grid-card-item:hover {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37,99,235,.45), 0 0 24px rgba(37,99,235,.40), 0 14px 30px rgba(37,99,235,.25) !important;
+            transform: translateY(-2px);
+        }
+        body.space-off #grid-links .grid-card-item:hover h4 {
+            color: #2563eb !important;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -670,7 +849,6 @@
                 <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 <span>Truy cập nhanh</span>
             </p>
-            <div id="login-required-note" class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 mb-3 text-[11px] font-bold text-amber-800 text-center">🔒 Hãy đăng nhập để chọn và xem nội dung các menu bên trái</div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-1 px-1">📂 Danh mục học tập</p>
             <div id="cat-nav" class="space-y-1 mb-3"></div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">🔗 Menu liên kết cũ</p>
