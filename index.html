@@ -1084,6 +1084,7 @@
                         <button class="ai-chip" onclick="askAiAboutScreen()">👀 Mô tả màn hình</button>
                         <button class="ai-chip" id="ai-watch-btn" onclick="toggleAiWatch()">⏱️ Tự xem mỗi 25s: Tắt</button>
                         <button class="ai-chip" onclick="toggleAiShare()">⏹️ Dừng chia sẻ</button>
+                        <button class="ai-chip" id="ai-draw-btn" onclick="toggleAiDraw()">🖊️ Bút vẽ</button>
                     </div>
                     <p class="text-[10.5px] text-slate-400 font-semibold mt-1">Ảnh màn hình chỉ gửi cho Gemini khi bạn hỏi (hoặc khi bật Tự xem). Bit không ghi hình/lưu trữ.</p>
                 </div>
@@ -2079,6 +2080,16 @@
         // Dọn các ghi nhớ "luôn mở tab mới" còn sót từ bản v18 (tính năng đã gỡ).
         try { Object.keys(localStorage).filter(k => k.indexOf('hoangpro_opentab_') === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}
 
+        // [v33] Tên miền trang đích CHẶN nhúng (đã kiểm chứng header): mở QUA PROXY trên Apps Script
+        // của trang (cần cài file proxy-cho-apps-script.gs vào dự án Apps Script + Deploy New version).
+        const PROXY_HOSTS = ['arena.site'];
+        function isProxiedHost(url) {
+            try {
+                const h = new URL(url).hostname.toLowerCase();
+                return PROXY_HOSTS.some(d => h === d || h.endsWith('.' + d));
+            } catch (e) { return false; }
+        }
+
         function openLink(url) {
             let cleanUrl = (url || "").trim();
             if (!cleanUrl) {
@@ -2095,7 +2106,9 @@
             const iframe = document.getElementById('iframe-container');
             
             wrapper.style.display = 'flex'; 
-            iframe.src = cleanUrl;
+            iframe.src = isProxiedHost(cleanUrl)
+                ? gasApiUrl + '?action=proxy&url=' + encodeURIComponent(cleanUrl)
+                : cleanUrl;
 
             document.getElementById('main-sidebar').classList.remove('force-expanded');
             // [v9] Không còn tự vào toàn màn hình khi mở link.
@@ -6346,6 +6359,68 @@ function updateLearnBadgesV27() {
   }
 })();
 
+    </script>
+
+    <!-- ===== v33: BÚT VẼ TÍCH HỢP VÀO CHATBOT BIT (vẽ lên màn hình khi chia sẻ cho Bit xem) ===== -->
+    <style>
+        #ai-draw-canvas { position: fixed; inset: 0; z-index: 940; display: none; touch-action: none; cursor: crosshair; }
+        #ai-draw-canvas.on { display: block; }
+        #ai-draw-bar { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 945; display: none; align-items: center; gap: 6px; background: rgba(15,23,42,.92); border: 2px solid #f59e0b; border-radius: 9999px; padding: 6px 10px; box-shadow: 0 8px 30px rgba(2,6,23,.5); flex-wrap: wrap; justify-content: center; max-width: 96vw; }
+        #ai-draw-bar.on { display: flex; }
+        .ai-draw-dot { width: 22px; height: 22px; border-radius: 9999px; border: 2px solid rgba(255,255,255,.35); cursor: pointer; padding: 0; }
+        .ai-draw-dot.active { border-color: #fff; box-shadow: 0 0 0 2px #f59e0b, 0 0 10px rgba(245,158,11,.8); }
+        .ai-draw-tool { background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 9999px; font-size: 11px; font-weight: 800; padding: 5px 10px; cursor: pointer; }
+        .ai-draw-tool.active { background: #f59e0b; color: #1e293b; border-color: #f59e0b; }
+        .ai-chip.live-draw { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+    </style>
+    <canvas id="ai-draw-canvas"></canvas>
+    <div id="ai-draw-bar" role="toolbar" aria-label="Công cụ bút vẽ">
+        <span style="color:#fbbf24;font-size:11px;font-weight:900">🖊️ BÚT VẼ</span>
+        <button class="ai-draw-dot active" style="background:#ef4444" onclick="aiDrawSetColor('#ef4444',this)" title="Màu đỏ"></button>
+        <button class="ai-draw-dot" style="background:#f59e0b" onclick="aiDrawSetColor('#f59e0b',this)" title="Màu vàng"></button>
+        <button class="ai-draw-dot" style="background:#22c55e" onclick="aiDrawSetColor('#22c55e',this)" title="Màu xanh lá"></button>
+        <button class="ai-draw-dot" style="background:#38bdf8" onclick="aiDrawSetColor('#38bdf8',this)" title="Màu xanh dương"></button>
+        <button class="ai-draw-tool ai-draw-size" onclick="aiDrawSetSize(3,this)">S</button>
+        <button class="ai-draw-tool ai-draw-size active" onclick="aiDrawSetSize(5,this)">M</button>
+        <button class="ai-draw-tool ai-draw-size" onclick="aiDrawSetSize(9,this)">L</button>
+        <button class="ai-draw-tool" onclick="aiDrawUndo()">↩️ Hoàn tác</button>
+        <button class="ai-draw-tool" onclick="aiDrawClear()">🗑️ Xóa hết</button>
+        <button class="ai-draw-tool" onclick="toggleAiDraw(false)">✔️ Xong</button>
+    </div>
+    <script>
+    (function () {
+        const cv = document.getElementById('ai-draw-canvas');
+        const bar = document.getElementById('ai-draw-bar');
+        const ctx = cv.getContext('2d');
+        let strokes = [], cur = null, color = '#ef4444', size = 5, on = false;
+        function line(pts, c, w) {
+            if (pts.length === 1) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, w / 2, 0, 7); ctx.fill(); return; }
+            ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+            ctx.stroke();
+        }
+        function redraw() { ctx.clearRect(0, 0, innerWidth, innerHeight); strokes.forEach(st => line(st.pts, st.c, st.w)); }
+        function fit() { const dpr = Math.min(window.devicePixelRatio || 1, 2); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); redraw(); }
+        cv.addEventListener('pointerdown', e => { if (!on) return; cur = { pts: [{ x: e.clientX, y: e.clientY }], c: color, w: size }; strokes.push(cur); try { cv.setPointerCapture(e.pointerId); } catch (err) {} line(cur.pts, cur.c, cur.w); });
+        cv.addEventListener('pointermove', e => { if (!cur) return; const p = cur.pts; p.push({ x: e.clientX, y: e.clientY }); ctx.strokeStyle = cur.c; ctx.lineWidth = cur.w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p[p.length - 2].x, p[p.length - 2].y); ctx.lineTo(p[p.length - 1].x, p[p.length - 1].y); ctx.stroke(); });
+        const end = () => { cur = null; };
+        cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+        window.addEventListener('resize', fit); fit();
+        window.toggleAiDraw = function (force) {
+            on = (typeof force === 'boolean') ? force : !on;
+            cv.classList.toggle('on', on); bar.classList.toggle('on', on);
+            const chip = document.getElementById('ai-draw-btn');
+            if (chip) { chip.textContent = on ? '🖊️ Bút vẽ: Đang bật' : '🖊️ Bút vẽ'; chip.classList.toggle('live-draw', on); }
+            if (on) { const tip = document.getElementById('ai-bot-tip'); if (tip) tip.textContent = '🖊️ Bút vẽ đang bật: vẽ/khoanh lên chỗ muốn Bit xem, rồi hỏi Bit như bình thường — ảnh màn hình gửi đi sẽ có cả nét vẽ của thầy.'; }
+        };
+        window.aiDrawSetColor = function (c, el) { color = c; document.querySelectorAll('.ai-draw-dot').forEach(b => b.classList.toggle('active', b === el)); };
+        window.aiDrawSetSize = function (w, el) { size = w; document.querySelectorAll('.ai-draw-size').forEach(b => b.classList.toggle('active', b === el)); };
+        window.aiDrawUndo = function () { strokes.pop(); redraw(); };
+        window.aiDrawClear = function () { strokes = []; redraw(); };
+        window.__aiDrawState = function () { return { on: on, strokes: strokes.length, points: strokes.reduce((a, st) => a + st.pts.length, 0) }; };
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && on) toggleAiDraw(false); });
+    })();
     </script>
 </body>
 </html>
