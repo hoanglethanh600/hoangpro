@@ -6430,11 +6430,16 @@ function updateLearnBadgesV27() {
 
     <!-- ===== v34: THANH CÔNG CỤ DƯỚI — Trình chiếu / Bút vẽ / Nhạc nền / Đọc bằng Gemini AI ===== -->
     <style>
-        #hp-bottom-bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 955; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 97vw; }
+        #hp-bottom-bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 955; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 97vw; transition: transform .38s ease, opacity .38s ease; }
+        #hp-bottom-bar.bar-hidden { transform: translateX(-50%) translateY(160%); opacity: 0; pointer-events: none; }
+        #hp-bar-peek { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); z-index: 954; width: 200px; height: 18px; display: flex; align-items: flex-start; justify-content: center; cursor: pointer; }
+        #hp-bar-peek span { display: block; width: 72px; height: 5px; margin-top: 4px; border-radius: 9999px; background: linear-gradient(90deg, #f59e0b, #fbbf24); opacity: .5; box-shadow: 0 0 10px rgba(245,158,11,.6); transition: opacity .2s ease; }
+        #hp-bar-peek:hover span { opacity: 1; }
         .hp-bb-btn { background: rgba(15,23,42,.88); color: #fcd34d; border: 1.5px solid rgba(245,158,11,.75); border-radius: 9999px; padding: 9px 16px; font-size: 13px; font-weight: 800; cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 6px 20px rgba(2,6,23,.45); transition: all .18s ease; white-space: nowrap; }
         .hp-bb-btn:hover { background: rgba(2,6,23,.96); color: #fde68a; box-shadow: 0 0 16px rgba(245,158,11,.5); }
         .hp-bb-btn.on { background: linear-gradient(135deg, #059669 0%, #22c55e 100%); color: #fff; border-color: #34d399; }
     </style>
+    <div id="hp-bar-peek" title="Hiện thanh công cụ"><span></span></div>
     <div id="hp-bottom-bar">
         <button class="hp-bb-btn" id="hp-bb-present" onclick="hpPresent()">🎞️ Trình chiếu</button>
         <button class="hp-bb-btn" id="hp-bb-draw" onclick="toggleAiDraw()">🖊️ Bút vẽ</button>
@@ -6445,6 +6450,27 @@ function updateLearnBadgesV27() {
     (function () {
         window.hpPresent = function () { if (typeof toggleFullscreen === 'function') toggleFullscreen(); };
         document.addEventListener('fullscreenchange', () => { const b = document.getElementById('hp-bb-present'); if (b) b.classList.toggle('on', !!document.fullscreenElement); });
+
+        // --- Thanh dưới TỰ ĐỘNG ẨN — rê chuột xuống mép dưới (hoặc chạm vào vạch vàng) thì hiện lại ---
+        (function () {
+            const bar = document.getElementById('hp-bottom-bar');
+            const peek = document.getElementById('hp-bar-peek');
+            if (!bar) return;
+            let timer = null, overBar = false, inZone = false;
+            function schedule(ms) { clearTimeout(timer); timer = setTimeout(tryHide, ms); }
+            function tryHide() { if (overBar || inZone) { schedule(1500); return; } bar.classList.add('bar-hidden'); }
+            function show() { bar.classList.remove('bar-hidden'); schedule(3000); }
+            bar.addEventListener('mouseenter', () => { overBar = true; clearTimeout(timer); bar.classList.remove('bar-hidden'); });
+            bar.addEventListener('mouseleave', () => { overBar = false; schedule(1400); });
+            if (peek) { peek.addEventListener('mouseenter', show); peek.addEventListener('click', show); }
+            document.addEventListener('mousemove', e => {
+                const was = inZone;
+                inZone = e.clientY > window.innerHeight - 80;
+                if (inZone && !was) show();
+            });
+            window.__hpBarState = function () { return { hidden: bar.classList.contains('bar-hidden') }; };
+            schedule(4000);
+        })();
 
         // --- Nhạc nền: hòa âm đệm nhẹ tự tổng hợp bằng WebAudio (không cần file nhạc) ---
         let bgmCtx = null, bgmMaster = null, bgmOn = false, bgmTimer = null, bgmStep = 0;
