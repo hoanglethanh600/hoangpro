@@ -6383,6 +6383,7 @@ function updateLearnBadgesV27() {
         <button class="ai-draw-tool ai-draw-size" onclick="aiDrawSetSize(3,this)">S</button>
         <button class="ai-draw-tool ai-draw-size active" onclick="aiDrawSetSize(5,this)">M</button>
         <button class="ai-draw-tool ai-draw-size" onclick="aiDrawSetSize(9,this)">L</button>
+        <button class="ai-draw-tool" id="ai-draw-erase" onclick="aiDrawToggleErase(this)">🧽 Tẩy</button>
         <button class="ai-draw-tool" onclick="aiDrawUndo()">↩️ Hoàn tác</button>
         <button class="ai-draw-tool" onclick="aiDrawClear()">🗑️ Xóa hết</button>
         <button class="ai-draw-tool" onclick="toggleAiDraw(false)">✔️ Xong</button>
@@ -6392,18 +6393,20 @@ function updateLearnBadgesV27() {
         const cv = document.getElementById('ai-draw-canvas');
         const bar = document.getElementById('ai-draw-bar');
         const ctx = cv.getContext('2d');
-        let strokes = [], cur = null, color = '#ef4444', size = 5, on = false;
-        function line(pts, c, w) {
-            if (pts.length === 1) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, w / 2, 0, 7); ctx.fill(); return; }
+        let strokes = [], cur = null, color = '#ef4444', size = 5, on = false, eraseMode = false;
+        function line(pts, c, w, e) {
+            ctx.globalCompositeOperation = e ? 'destination-out' : 'source-over';
+            if (pts.length === 1) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, w / 2, 0, 7); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; return; }
             ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
             for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
             ctx.stroke();
+            ctx.globalCompositeOperation = 'source-over';
         }
-        function redraw() { ctx.clearRect(0, 0, innerWidth, innerHeight); strokes.forEach(st => line(st.pts, st.c, st.w)); }
+        function redraw() { ctx.clearRect(0, 0, innerWidth, innerHeight); strokes.forEach(st => line(st.pts, st.c, st.w, st.e)); }
         function fit() { const dpr = Math.min(window.devicePixelRatio || 1, 2); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); redraw(); }
-        cv.addEventListener('pointerdown', e => { if (!on) return; cur = { pts: [{ x: e.clientX, y: e.clientY }], c: color, w: size }; strokes.push(cur); try { cv.setPointerCapture(e.pointerId); } catch (err) {} line(cur.pts, cur.c, cur.w); });
-        cv.addEventListener('pointermove', e => { if (!cur) return; const p = cur.pts; p.push({ x: e.clientX, y: e.clientY }); ctx.strokeStyle = cur.c; ctx.lineWidth = cur.w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p[p.length - 2].x, p[p.length - 2].y); ctx.lineTo(p[p.length - 1].x, p[p.length - 1].y); ctx.stroke(); });
+        cv.addEventListener('pointerdown', e => { if (!on) return; cur = { pts: [{ x: e.clientX, y: e.clientY }], c: color, w: size, e: eraseMode }; strokes.push(cur); try { cv.setPointerCapture(e.pointerId); } catch (err) {} line(cur.pts, cur.c, cur.w, cur.e); });
+        cv.addEventListener('pointermove', e => { if (!cur) return; const p = cur.pts; p.push({ x: e.clientX, y: e.clientY }); ctx.globalCompositeOperation = cur.e ? 'destination-out' : 'source-over'; ctx.strokeStyle = cur.c; ctx.lineWidth = cur.w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p[p.length - 2].x, p[p.length - 2].y); ctx.lineTo(p[p.length - 1].x, p[p.length - 1].y); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; });
         const end = () => { cur = null; };
         cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
         window.addEventListener('resize', fit); fit();
@@ -6412,14 +6415,77 @@ function updateLearnBadgesV27() {
             cv.classList.toggle('on', on); bar.classList.toggle('on', on);
             const chip = document.getElementById('ai-draw-btn');
             if (chip) { chip.textContent = on ? '🖊️ Bút vẽ: Đang bật' : '🖊️ Bút vẽ'; chip.classList.toggle('live-draw', on); }
+            const bb = document.getElementById('hp-bb-draw'); if (bb) bb.classList.toggle('on', on);
             if (on) { const tip = document.getElementById('ai-bot-tip'); if (tip) tip.textContent = '🖊️ Bút vẽ đang bật: vẽ/khoanh lên chỗ muốn Bit xem, rồi hỏi Bit như bình thường — ảnh màn hình gửi đi sẽ có cả nét vẽ của thầy.'; }
         };
-        window.aiDrawSetColor = function (c, el) { color = c; document.querySelectorAll('.ai-draw-dot').forEach(b => b.classList.toggle('active', b === el)); };
+        window.aiDrawSetColor = function (c, el) { color = c; eraseMode = false; const eb = document.getElementById('ai-draw-erase'); if (eb) eb.classList.remove('active'); document.querySelectorAll('.ai-draw-dot').forEach(b => b.classList.toggle('active', b === el)); };
+        window.aiDrawToggleErase = function (el) { eraseMode = !eraseMode; if (el) el.classList.toggle('active', eraseMode); };
         window.aiDrawSetSize = function (w, el) { size = w; document.querySelectorAll('.ai-draw-size').forEach(b => b.classList.toggle('active', b === el)); };
         window.aiDrawUndo = function () { strokes.pop(); redraw(); };
         window.aiDrawClear = function () { strokes = []; redraw(); };
-        window.__aiDrawState = function () { return { on: on, strokes: strokes.length, points: strokes.reduce((a, st) => a + st.pts.length, 0) }; };
+        window.__aiDrawState = function () { return { on: on, erase: eraseMode, strokes: strokes.length, points: strokes.reduce((a, st) => a + st.pts.length, 0) }; };
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && on) toggleAiDraw(false); });
+    })();
+    </script>
+
+    <!-- ===== v34: THANH CÔNG CỤ DƯỚI — Trình chiếu / Bút vẽ / Nhạc nền / Đọc bằng Gemini AI ===== -->
+    <style>
+        #hp-bottom-bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 955; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 97vw; }
+        .hp-bb-btn { background: rgba(15,23,42,.88); color: #fcd34d; border: 1.5px solid rgba(245,158,11,.75); border-radius: 9999px; padding: 9px 16px; font-size: 13px; font-weight: 800; cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 6px 20px rgba(2,6,23,.45); transition: all .18s ease; white-space: nowrap; }
+        .hp-bb-btn:hover { background: rgba(2,6,23,.96); color: #fde68a; box-shadow: 0 0 16px rgba(245,158,11,.5); }
+        .hp-bb-btn.on { background: linear-gradient(135deg, #059669 0%, #22c55e 100%); color: #fff; border-color: #34d399; }
+    </style>
+    <div id="hp-bottom-bar">
+        <button class="hp-bb-btn" id="hp-bb-present" onclick="hpPresent()">🎞️ Trình chiếu</button>
+        <button class="hp-bb-btn" id="hp-bb-draw" onclick="toggleAiDraw()">🖊️ Bút vẽ</button>
+        <button class="hp-bb-btn" id="hp-bb-music" onclick="hpToggleBgm()">🎵 Nhạc nền</button>
+        <button class="hp-bb-btn" id="hp-bb-read" onclick="hpReadPage()">🔊 Đọc bằng Gemini AI</button>
+    </div>
+    <script>
+    (function () {
+        window.hpPresent = function () { if (typeof toggleFullscreen === 'function') toggleFullscreen(); };
+        document.addEventListener('fullscreenchange', () => { const b = document.getElementById('hp-bb-present'); if (b) b.classList.toggle('on', !!document.fullscreenElement); });
+
+        // --- Nhạc nền: hòa âm đệm nhẹ tự tổng hợp bằng WebAudio (không cần file nhạc) ---
+        let bgmCtx = null, bgmMaster = null, bgmOn = false, bgmTimer = null, bgmStep = 0;
+        const CHORDS = [[261.63, 329.63, 392.00, 493.88], [220.00, 261.63, 329.63, 392.00], [174.61, 220.00, 261.63, 329.63], [196.00, 246.94, 293.66, 392.00]];
+        function playChord(freqs, t, dur) {
+            freqs.forEach((f, i) => { const o = bgmCtx.createOscillator(), g = bgmCtx.createGain(); o.type = i ? 'sine' : 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.032, t + 1.2); g.gain.setValueAtTime(0.032, t + dur - 1.4); g.gain.linearRampToValueAtTime(0, t + dur); o.connect(g); g.connect(bgmMaster); o.start(t); o.stop(t + dur + 0.1); });
+            const scale = [523.25, 587.33, 659.25, 783.99, 880.00];
+            for (let k = 0; k < 4; k++) { const o = bgmCtx.createOscillator(), g = bgmCtx.createGain(); const st = t + 1 + k * 1.1 + Math.random() * 0.4; o.type = 'sine'; o.frequency.value = scale[Math.floor(Math.random() * scale.length)]; g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(0.016, st + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, st + 1.4); o.connect(g); g.connect(bgmMaster); o.start(st); o.stop(st + 1.6); }
+        }
+        function bgmLoop() { if (!bgmOn) return; playChord(CHORDS[bgmStep % 4], bgmCtx.currentTime + 0.1, 4.6); bgmStep++; bgmTimer = setTimeout(bgmLoop, 4400); }
+        window.hpToggleBgm = function (force) {
+            const want = (typeof force === 'boolean') ? force : !bgmOn;
+            if (want === bgmOn && bgmCtx) { /* giu nguyen */ } else {
+                bgmOn = want;
+                const btn = document.getElementById('hp-bb-music'); if (btn) btn.classList.toggle('on', bgmOn);
+                if (bgmOn) {
+                    if (!bgmCtx) { const AC = window.AudioContext || window.webkitAudioContext; bgmCtx = new AC(); bgmMaster = bgmCtx.createGain(); bgmMaster.gain.value = 0.9; bgmMaster.connect(bgmCtx.destination); }
+                    if (bgmCtx.state === 'suspended') bgmCtx.resume();
+                    bgmStep = 0; bgmLoop();
+                } else {
+                    if (bgmTimer) clearTimeout(bgmTimer);
+                    if (bgmCtx) bgmCtx.suspend();
+                }
+                try { localStorage.setItem('hoangpro_bgm_on', bgmOn ? '1' : '0'); } catch (e) {}
+            }
+        };
+        window.__hpBgmState = function () { return { on: bgmOn, ctx: bgmCtx ? bgmCtx.state : 'none' }; };
+        try { if (localStorage.getItem('hoangpro_bgm_on') === '1') document.addEventListener('pointerdown', function arm() { document.removeEventListener('pointerdown', arm); if (!bgmOn) hpToggleBgm(true); }); } catch (e) {}
+
+        // --- Đọc trang bằng Gemini AI: gom chữ đang hiển thị rồi đưa vào pipeline đọc của Bit ---
+        window.hpReadPage = function () {
+            let txt = '';
+            const wrap = document.getElementById('iframe-wrapper');
+            if (wrap && wrap.style.display !== 'none' && typeof currentActiveMenuName !== 'undefined' && currentActiveMenuName) {
+                txt = 'Thầy đang xem nội dung: ' + currentActiveMenuName + '.';
+            } else {
+                const names = Array.from(document.querySelectorAll('.grid-card-item h3, .menu-btn-item')).slice(0, 30).map(e => (e.innerText || '').trim()).filter(Boolean);
+                txt = 'Trang HOANGPRO — Mở rộng tâm hồn, nâng tầm tri thức.' + (names.length ? ' Các mục đang hiển thị gồm: ' + names.join(', ') + '.' : '');
+            }
+            if (typeof speakAiText === 'function') speakAiText(txt.slice(0, 700));
+        };
     })();
     </script>
 </body>
