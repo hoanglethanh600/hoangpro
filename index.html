@@ -1276,6 +1276,7 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mb-4 bg-white border rounded-2xl p-3"><button onclick="suggestCatIcon(true)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">🤖 AI gợi ý icon</button><label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer"><input type="checkbox" id="ad-cat-auto-icon" checked class="w-4 h-4 accent-indigo-600"> Tự gợi ý khi gõ tên</label><div id="ad-cat-icon-suggest" class="flex gap-1 flex-wrap"></div><span class="text-[11px] text-slate-500 font-semibold">Bấm chip để chọn. Có key Gemini thì nút này hỏi Gemini trước, không có key thì gợi ý theo từ khoá.</span></div>
                     <div class="flex flex-wrap gap-2 mb-4"><button onclick="autoFillMissingCatIcons()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">🤖 Tự điền icon còn thiếu (danh mục)</button><button onclick="resetCatForm()" class="px-4 py-2 bg-white border rounded-xl text-xs font-bold">＋ Tạo danh mục mới</button><button onclick="seedToSheet()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">📥 Lưu dữ liệu mẫu (Tin học 6–9 + 17 bài + đề 40 câu) lên Sheet</button></div>
+                    <div id="cat-vis-bar" style="display:none" class="flex flex-wrap items-center gap-2 mb-4 bg-amber-50 border border-amber-300 rounded-2xl p-3"><span id="cat-vis-text" class="text-xs font-bold text-amber-800"></span><button onclick="saveCatHidden()" class="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-black shadow">💾 LƯU trạng thái ẩn/hiện lên Sheet</button><button onclick="revertCatHidden()" class="px-4 py-2 bg-white border rounded-xl text-xs font-bold">↩ Hoàn tác</button></div>
                     <div class="flex flex-wrap items-center gap-2 mb-3 bg-slate-50 border rounded-2xl p-3">
                         <input type="text" id="ad-cat-search" oninput="renderCatAdmin()" placeholder="🔍 Tìm tên danh mục…" class="flex-1 min-w-[180px] p-2.5 border rounded-xl text-sm bg-white">
                         <select id="ad-cat-sort" onchange="renderCatAdmin()" class="p-2.5 border rounded-xl text-sm bg-white"><option value="order">Sắp xếp: Thứ tự ↑</option><option value="order-desc">Thứ tự ↓</option><option value="name-asc">Tên A → Z</option><option value="name-desc">Tên Z → A</option></select>
@@ -6588,5 +6589,115 @@ function updateLearnBadgesV27() {
         };
     })();
     </script>
+<script>
+/* ============================================================
+   V40 — ẨN/HIỆN DANH MỤC: nút LƯU xác nhận trạng thái (theo yêu cầu của thầy)
+   Nguyên nhân v39 chưa ăn: Apps Script hiện tại của mục Danh mục chỉ ghi
+   5 trường cố định (id, name, parentId, icon, sortOrder) — trường hidden
+   gửi kèm bị bỏ qua (đọc lại Sheet thấy không có cột hidden/feemode/price),
+   nên bấm Ẩn chỉ có tác dụng trong phiên, tải lại trang là mất.
+   Cơ chế V40:
+   - Bấm Ẩn/Hiện = chỉ đổi trạng thái TẠM trên trang + hiện thanh "CHƯA LƯU".
+   - Bấm "💾 LƯU trạng thái ẩn/hiện" mới ghi thật: trạng thái lưu vào một
+     mục cấu hình ẩn trong Sheet sidebarItems (kênh saveSidebarItem đã kiểm
+     chứng ghi/đọc bền bằng dữ liệu thật), rồi ĐỌC LẠI từ Sheet đối chiếu,
+     khớp mới báo "đã lưu".
+   - Mục cấu hình bị isVisibleMenuItem loại khỏi Sidebar (khách không thấy,
+     Quản trị Sidebar cũng không thấy).
+   ============================================================ */
+var CFG_CAT_HIDDEN_ID = '__cfg_cat_hidden__';
+var catHiddenSet = new Set();
+var catHiddenSaved = new Set();
+var catHiddenLoaded = false;
+function stampCatHidden() { try { categories.forEach(function (c) { c.hidden = catHiddenSet.has(String(c.id)); }); } catch (e) {} }
+function catHiddenDiffCount() { var n = 0; catHiddenSet.forEach(function (id) { if (!catHiddenSaved.has(id)) n++; }); catHiddenSaved.forEach(function (id) { if (!catHiddenSet.has(id)) n++; }); return n; }
+function updateCatVisBar() {
+  var bar = document.getElementById('cat-vis-bar'); if (!bar) return;
+  var txt = document.getElementById('cat-vis-text'); if (!txt) return;
+  if (!catHiddenLoaded) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  var n = catHiddenDiffCount();
+  if (n > 0) { txt.innerHTML = '⚠️ Có <b>' + n + '</b> thay đổi ẩn/hiện <b>CHƯA LƯU</b> — bấm nút LƯU để xác nhận lên Google Sheet.'; }
+  else { txt.innerHTML = '✔ Trạng thái ẩn/hiện <b>đã lưu</b> trên Google Sheet (' + catHiddenSaved.size + ' danh mục đang ẩn).'; }
+}
+async function toggleCatHidden(id) {
+  id = String(id);
+  if (catHiddenSet.has(id)) catHiddenSet.delete(id); else catHiddenSet.add(id);
+  stampCatHidden(); renderCatNav(); renderCatAdmin();
+}
+function revertCatHidden() { catHiddenSet = new Set(catHiddenSaved); stampCatHidden(); renderCatNav(); renderCatAdmin(); }
+function parseCfgHiddenIds(rows) {
+  var out = null;
+  (rows || []).forEach(function (r) { if (r && String(r.id) === CFG_CAT_HIDDEN_ID) { try { var arr = JSON.parse(r.url || '[]'); if (Array.isArray(arr)) out = arr.map(String); } catch (e) {} } });
+  return out;
+}
+async function fetchCfgHiddenIds() {
+  var r = await fetch(gasApiUrl + '?action=getSidebar').then(function (x) { return x.json(); }).catch(function () { return {}; });
+  return parseCfgHiddenIds(r.data || []);
+}
+async function saveCatHidden() {
+  var ids = Array.from(catHiddenSet);
+  var item = { id: CFG_CAT_HIDDEN_ID, name: '__CFG_CAT_HIDDEN__', url: JSON.stringify(ids), image: '', type: 'config', feeMode: 'free', price: '', parentId: '' };
+  try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveSidebarItem', item: item }) }); } catch (e) {}
+  await new Promise(function (r) { setTimeout(r, 1200); });
+  var back = null;
+  try { back = await fetchCfgHiddenIds(); } catch (e) {}
+  if (back && back.slice().sort().join('|') === ids.slice().sort().join('|')) {
+    catHiddenSaved = new Set(ids); catHiddenLoaded = true;
+    stampCatHidden(); renderCatNav(); renderCatAdmin();
+    var names = ids.map(function (i) { var c = getCat(i); return c ? c.name : i; });
+    alert('✅ ĐÃ LƯU trạng thái ẩn/hiện lên Google Sheet và đọc lại kiểm chứng khớp.\n\nĐang ẩn (' + ids.length + '): ' + (names.length ? names.join(', ') : '— không có —') + '\n\nTải lại trang (F5) hoặc mở máy khác, trạng thái này vẫn giữ nguyên.');
+  } else {
+    alert('⚠️ CHƯA lưu được trạng thái ẩn/hiện: đọc lại từ Sheet không thấy dữ liệu vừa ghi. Hãy kiểm tra mạng rồi bấm LƯU lại. Trạng thái tạm trên trang vẫn giữ để thầy thử lại.');
+  }
+  updateCatVisBar();
+}
+async function loadCatHidden() {
+  var ids = null;
+  try { ids = await fetchCfgHiddenIds(); } catch (e) {}
+  if (ids) { catHiddenSet = new Set(ids); catHiddenSaved = new Set(ids); }
+  else { try { catHiddenSet = new Set(categories.filter(function (c) { return c.hidden; }).map(function (c) { return String(c.id); })); catHiddenSaved = new Set(catHiddenSet); } catch (e) {} }
+  catHiddenLoaded = true;
+  try {
+    if (typeof sidebar !== 'undefined' && sidebar.some(function (i) { return String(i.id) === CFG_CAT_HIDDEN_ID; })) {
+      sidebar = sidebar.filter(function (i) { return String(i.id) !== CFG_CAT_HIDDEN_ID; });
+      if (typeof render === 'function') render();
+    }
+  } catch (e) {}
+  stampCatHidden();
+  try { renderCatNav(); } catch (e) {}
+  try { renderCatAdmin(); } catch (e) {}
+  updateCatVisBar();
+}
+(function hookCatHiddenV40() {
+  if (typeof isVisibleMenuItem === 'function' && !isVisibleMenuItem.__v40) {
+    var origF = isVisibleMenuItem;
+    var wf = function (it) { if (it && String(it.id) === CFG_CAT_HIDDEN_ID) return false; return origF(it); };
+    wf.__v40 = true; isVisibleMenuItem = wf;
+  }
+  if (typeof renderCatNav === 'function' && !renderCatNav.__v40) {
+    var origN = renderCatNav;
+    var wn = function () { stampCatHidden(); origN(); };
+    wn.__v40 = true; renderCatNav = wn;
+  }
+  if (typeof renderCatAdmin === 'function' && !renderCatAdmin.__v40) {
+    var origA = renderCatAdmin;
+    var wa = function () { stampCatHidden(); origA(); updateCatVisBar(); };
+    wa.__v40 = true; renderCatAdmin = wa;
+  }
+  if (typeof syncNew === 'function' && !syncNew.__v40) {
+    var origS = syncNew;
+    var ws = async function () { await origS(); stampCatHidden(); try { renderCatNav(); } catch (e) {} try { renderCatAdmin(); } catch (e) {} };
+    ws.__v40 = true; syncNew = ws;
+  }
+  var tries = 0;
+  var iv = setInterval(function () {
+    tries++;
+    if (typeof categories !== 'undefined' && categories.length) { clearInterval(iv); loadCatHidden(); }
+    else if (tries > 40) { clearInterval(iv); loadCatHidden(); }
+  }, 500);
+})();
+
+</script>
 </body>
 </html>
