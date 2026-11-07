@@ -3363,7 +3363,7 @@ refreshAiGate();
      trong tab Danh mục để lưu mẫu lên Sheet thật.
    ============================================================ */
 let categories = [], posts = [];
-let usingSeed = false, currentCatId = '', currentLessonId = '', currentQuizPostId = '';
+let usingSeed = false, catsOnSheet = false, currentCatId = '', currentLessonId = '', currentQuizPostId = '';
 let localAddedCats = [], localAddedPosts = [];
 let quizState = null, quizTimer = null;
 
@@ -3477,7 +3477,7 @@ function renderRich(t) {
   return escHtml(s).split(/\n\s*\n/).map(p => '<p style="line-height:1.8;color:#334155;font-size:14px">' + p.replace(/\n/g, '<br>') + '</p>').join('');
 }
 function hideNewViews() { ['category-view', 'lesson-view', 'quiz-view'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); }
-function normCats(rows) { return rows.map(c => ({ id: String(c.id || ''), name: c.name || '', parentId: String(c.parentid || c.parentId || ''), icon: c.icon || '📁', sortOrder: Number(c.sortorder || c.sortOrder || 0) || 0 })).filter(c => c.id && c.name); }
+function normCats(rows) { return rows.map(c => ({ id: String(c.id || ''), name: c.name || '', parentId: String(c.parentid || c.parentId || ''), icon: c.icon || '📁', sortOrder: Number(c.sortorder || c.sortOrder || 0) || 0, hidden: (c.hidden === true || String(c.hidden) === '1' || String(c.hidden).toLowerCase() === 'true') })).filter(c => c.id && c.name); }
 function normPosts(rows) {
   return rows.map(p => {
     let qs = [];
@@ -3491,11 +3491,11 @@ let expandedCats = { 'cat-th': true };
 function toggleCat(id) { expandedCats[id] = !expandedCats[id]; renderCatNav(); }
 function renderCatNav() {
   const nav = document.getElementById('cat-nav'); if (!nav) return;
-  const parents = categories.filter(c => !c.parentId || !getCat(c.parentId)).sort((a, b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name)));
+  const parents = categories.filter(c => (!c.parentId || !getCat(c.parentId)) && !c.hidden).sort((a, b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name)));
   let html = '';
   if (!parents.length) { nav.innerHTML = '<p class="text-[11px] text-slate-600 font-semibold px-2 py-2">Chưa có danh mục. Admin tạo trong tab Danh mục.</p>'; return; }
   parents.forEach(par => {
-    const subs = childrenOf(par.id);
+    const subs = childrenOf(par.id).filter(s => !s.hidden);
     const open = expandedCats[par.id] !== false;
     html += '<div class="mb-1"><div class="flex items-center gap-1">'
       + '<button onclick="toggleCat(\'' + escAttr(par.id) + '\')" class="w-6 h-6 shrink-0 text-slate-400 font-black" title="Mở/đóng danh mục con">' + (open ? '▾' : '▸') + '</button>'
@@ -3522,7 +3522,7 @@ function showCategoryView(id) {
   const view = document.getElementById('category-view'); if (view) view.style.display = 'block';
   const par = cat.parentId ? getCat(cat.parentId) : null;
   const lessons = postsOf(id, 'lesson'), quizzes = postsOf(id, 'quiz');
-  const subs = childrenOf(id);
+  const subs = childrenOf(id).filter(s => !s.hidden);
   document.getElementById('cat-view-title').innerHTML = escHtml(cat.icon) + ' ' + escHtml(cat.name);
   document.getElementById('cat-view-crumb').innerText = (par ? par.name + ' › ' : '') + cat.name;
   document.getElementById('cat-view-stats').innerText = lessons.length + ' bài học · ' + quizzes.length + ' đề thi' + (subs.length ? ' · ' + subs.length + ' danh mục con' : '');
@@ -3654,12 +3654,12 @@ async function syncNew() {
     ]);
     const gotC = Array.isArray(rC.data) && rC.data.length ? normCats(rC.data) : null;
     const gotP = Array.isArray(rP.data) && rP.data.length ? normPosts(rP.data) : null;
-    if (gotC) { categories = gotC; localAddedCats.forEach(c => { if (!getCat(c.id)) categories.push(c); }); usingSeed = false; }
-    else if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; }
+    if (gotC) { categories = gotC; localAddedCats.forEach(c => { if (!getCat(c.id)) categories.push(c); }); usingSeed = false; catsOnSheet = true; }
+    else if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; catsOnSheet = false; }
     if (gotP) { posts = gotP; localAddedPosts.forEach(p => { if (!getPost(p.id)) posts.push(p); }); }
     else if (!posts.length) { posts = SEED_POSTS.slice(); usingSeed = true; }
   } catch (e) {
-    if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; }
+    if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; catsOnSheet = false; }
     if (!posts.length) { posts = SEED_POSTS.slice(); usingSeed = true; }
   }
   renderCatNav(); renderCatAdmin();
@@ -3686,7 +3686,7 @@ function renderCatAdmin() {
   tbl.innerHTML = getFilteredCats().map(c => {
     const par = c.parentId ? getCat(c.parentId) : null;
     const nSub = childrenOf(c.id).length, nPost = posts.filter(p => String(p.categoryId) === String(c.id)).length;
-    return '<tr><td class="font-bold">' + escHtml(c.icon) + ' ' + escHtml(c.name) + '</td><td>' + (par ? escHtml(par.name) : '<span class="text-slate-400">— Gốc —</span>') + '</td><td>' + nSub + ' mục con · ' + nPost + ' bài/đề</td><td class="text-right"><button onclick="editCategory(\'' + escAttr(c.id) + '\')" class="text-indigo-600 font-bold mr-3 hover:underline">Sửa</button><button onclick="deleteCategory(\'' + escAttr(c.id) + '\')" class="text-red-500 font-bold hover:underline">Xóa</button></td></tr>';
+    return '<tr' + (c.hidden ? ' style="opacity:.55"' : '') + '><td class="font-bold">' + escHtml(c.icon) + ' ' + escHtml(c.name) + (c.hidden ? ' <span class="px-2 py-0.5 bg-slate-700 text-white rounded-lg text-[10px] font-black align-middle">ĐANG ẨN</span>' : '') + '</td><td>' + (par ? escHtml(par.name) : '<span class="text-slate-400">— Gốc —</span>') + '</td><td>' + nSub + ' mục con · ' + nPost + ' bài/đề</td><td class="text-right"><button onclick="toggleCatHidden(\'' + escAttr(c.id) + '\')" class="' + (c.hidden ? 'text-emerald-600' : 'text-amber-600') + ' font-bold mr-3 hover:underline">' + (c.hidden ? 'Hiện' : 'Ẩn') + '</button><button onclick="editCategory(\'' + escAttr(c.id) + '\')" class="text-indigo-600 font-bold mr-3 hover:underline">Sửa</button><button onclick="deleteCategory(\'' + escAttr(c.id) + '\')" class="text-red-500 font-bold hover:underline">Xóa</button></td></tr>';
   }).join('') || '<tr><td colspan="4" class="text-center text-slate-600 font-bold py-4">Chưa có danh mục.</td></tr>';
   const ptbl = document.getElementById('ad-posts-table'); if (!ptbl) return;
   const filteredPosts = getFilteredPosts();
@@ -3706,7 +3706,7 @@ async function saveCategory() {
   if (!name) { alert('Nhập tên danh mục.'); return; }
   const id = document.getElementById('ad-cat-id').value || 'cat-' + Date.now();
   if (parentId === id) { alert('Danh mục không thể là cha của chính nó.'); return; }
-  const item = { id: id, name: name, parentId: parentId, icon: document.getElementById('ad-cat-icon').value.trim() || '📁', sortOrder: Number(document.getElementById('ad-cat-order').value) || 0 };
+  const item = { id: id, name: name, parentId: parentId, icon: document.getElementById('ad-cat-icon').value.trim() || '📁', sortOrder: Number(document.getElementById('ad-cat-order').value) || 0, hidden: (getCat(id) || {}).hidden ? 1 : 0 };
   try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveCategory', item: item }) }); } catch (e) {}
   const old = getCat(id);
   if (old) Object.assign(old, item); else { categories.push(item); localAddedCats.push(item); }
@@ -3728,6 +3728,23 @@ async function deleteCategory(id) {
   categories = categories.filter(x => String(x.id) !== String(id));
   localAddedCats = localAddedCats.filter(x => String(x.id) !== String(id));
   renderCatNav(); renderCatAdmin();
+}
+async function toggleCatHidden(id) {
+  const c = getCat(id); if (!c) return;
+  const target = !c.hidden;
+  const wasSeed = !catsOnSheet;
+  const mkItem = function (x, hid) { return { id: x.id, name: x.name, parentId: x.parentId || '', icon: x.icon || '📁', sortOrder: x.sortOrder || 0, feemode: x.feemode || 'default', price: (x.price === undefined || x.price === null) ? '' : x.price, hidden: hid ? 1 : 0 }; };
+  if (wasSeed) {
+    /* Sheet chưa có dữ liệu (đang dùng dữ liệu mẫu): phải lưu TOÀN BỘ danh mục lên Sheet trước,
+       nếu chỉ lưu 1 danh mục vừa ẩn thì lần tải lại trang các danh mục mẫu còn lại sẽ biến mất. */
+    for (const x of categories) { try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveCategory', item: mkItem(x, String(x.id) === String(id) ? target : !!x.hidden) }) }); } catch (e) {} }
+    catsOnSheet = true;
+  } else {
+    try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveCategory', item: mkItem(c, target) }) }); } catch (e) {}
+  }
+  c.hidden = target;
+  renderCatNav(); renderCatAdmin();
+  if (wasSeed) alert('Đã ' + (target ? 'ẩn' : 'hiện') + ' danh mục “' + c.name + '”.\nToàn bộ danh mục hiện tại cũng đã được lưu lên Google Sheet để trạng thái ẩn/hiện có hiệu lực bền vững (trước đó trang đang hiển thị dữ liệu mẫu chưa lưu).');
 }
 async function seedToSheet() {
   if (!confirm('Lưu toàn bộ dữ liệu mẫu (Tin học, Tin học 6–9, 17 bài Tin học 6, bài mẫu 7–9 và đề 40 câu) lên Google Sheet?')) return;
@@ -5453,12 +5470,12 @@ async function syncNew() {
     if (rP && rP.success === false) window.__gasSyncError = rP.error || 'Invalid Action';
     const gotC = Array.isArray(rC.data) && rC.data.length ? normCats(rC.data) : null;
     const gotP = Array.isArray(rP.data) && rP.data.length ? normPosts(rP.data) : null;
-    if (gotC) { categories = gotC; localAddedCats.forEach(c => { if (!getCat(c.id)) categories.push(c); }); usingSeed = false; }
-    else if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; }
+    if (gotC) { categories = gotC; localAddedCats.forEach(c => { if (!getCat(c.id)) categories.push(c); }); usingSeed = false; catsOnSheet = true; }
+    else if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; catsOnSheet = false; }
     if (gotP) { posts = gotP; localAddedPosts.forEach(p => { if (!getPost(p.id)) posts.push(p); }); }
     else if (!posts.length) { posts = SEED_POSTS.slice(); usingSeed = true; }
   } catch (e) {
-    if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; }
+    if (!categories.length) { categories = SEED_CATEGORIES.slice(); usingSeed = true; catsOnSheet = false; }
     if (!posts.length) { posts = SEED_POSTS.slice(); usingSeed = true; }
   }
   renderCatNav(); renderCatAdmin();
@@ -5739,7 +5756,7 @@ if (__origShowQuizIntro) {
   }
 })();
 function normCats(rows) {
-  return rows.map(c => ({ id: String(c.id || ''), name: c.name || '', parentId: String(c.parentid || c.parentId || ''), icon: c.icon || '📁', sortOrder: Number(c.sortorder || c.sortOrder || 0) || 0, feemode: (c.feemode || c.feeMode || 'default'), price: (c.price !== undefined && c.price !== null && String(c.price) !== '') ? c.price : ((c.gia !== undefined && c.gia !== null && String(c.gia) !== '') ? c.gia : '') })).filter(c => c.id && c.name);
+  return rows.map(c => ({ id: String(c.id || ''), name: c.name || '', parentId: String(c.parentid || c.parentId || ''), icon: c.icon || '📁', sortOrder: Number(c.sortorder || c.sortOrder || 0) || 0, feemode: (c.feemode || c.feeMode || 'default'), price: (c.price !== undefined && c.price !== null && String(c.price) !== '') ? c.price : ((c.gia !== undefined && c.gia !== null && String(c.gia) !== '') ? c.gia : ''), hidden: (c.hidden === true || String(c.hidden) === '1' || String(c.hidden).toLowerCase() === 'true') })).filter(c => c.id && c.name);
 }
 function resetCatForm() {
   document.getElementById('ad-cat-id').value = '';
@@ -5759,7 +5776,7 @@ async function saveCategory() {
   const feemode = (document.getElementById('ad-cat-feemode') || {}).value || 'default';
   const priceRaw = (document.getElementById('ad-cat-price') || {}).value;
   const price = (priceRaw === undefined || String(priceRaw).trim() === '') ? '' : Number(priceRaw);
-  const item = { id: id, name: name, parentId: parentId, icon: document.getElementById('ad-cat-icon').value.trim() || '📁', sortOrder: Number(document.getElementById('ad-cat-order').value) || 0, feemode: feemode, price: price };
+  const item = { id: id, name: name, parentId: parentId, icon: document.getElementById('ad-cat-icon').value.trim() || '📁', sortOrder: Number(document.getElementById('ad-cat-order').value) || 0, feemode: feemode, price: price, hidden: (getCat(id) || {}).hidden ? 1 : 0 };
   try { await fetch(gasApiUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveCategory', item: item }) }); } catch (e) {}
   const old = getCat(id);
   if (old) Object.assign(old, item); else { categories.push(item); localAddedCats.push(item); }
